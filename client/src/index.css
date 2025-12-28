@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --color-card: var(--card-bg);
+  --color-section-alt: var(--section-alt);
+  --color-border-soft: var(--border-soft);
+
+  --font-family-display: "Playfair Display", serif;
+  --font-family-sans: "Inter", sans-serif;
+
+  --radius-card: var(--radius-lg);
+}
+
+:root {
+  --background: #FFFFFF;
+  --foreground: #1f2933;
+
+  --primary: #0d9488;
+  --primary-soft: #ccfbf1;
+  --secondary: #f1f5f9;
+
+  --accent: #fde68a;
+  --muted: #6b7280;
+
+  --card-bg: #FAFAF9;
+  --section-alt: #FAFAF9;
+  --border-soft: #e5e7eb;
+
+  --radius-lg: 1.25rem;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2 {
+  font-family: "Playfair Display", serif;
+}
+
+/* Explicit utilities to ensure application */
+.font-display {
+  font-family: "Playfair Display", serif;
+}
+
+.font-sans {
+  font-family: "Inter", sans-serif;
+}
