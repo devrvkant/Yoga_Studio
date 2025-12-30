@@ -1,10 +1,15 @@
 import { useLocation, Navigate, Outlet } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '../../features/auth/authSlice';
+import { useGetMeQuery } from '../../features/auth/authApi';
 
 const RequireAuth = () => {
-    const user = useSelector(selectCurrentUser);
+    const { data: authData, isLoading } = useGetMeQuery();
     const location = useLocation();
+
+    if (isLoading) {
+        return null;
+    }
+
+    const user = authData?.data || authData;
 
     return user ? (
         <Outlet />

@@ -1,9 +1,14 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '../../features/auth/authSlice';
+import { useGetMeQuery } from '../../features/auth/authApi';
 
 const PublicOnly = () => {
-    const user = useSelector(selectCurrentUser);
+    const { data: authData, isLoading } = useGetMeQuery();
+
+    if (isLoading) {
+        return null;
+    }
+
+    const user = authData?.data || authData;
 
     return user ? <Navigate to="/" replace /> : <Outlet />;
 };
