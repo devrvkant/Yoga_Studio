@@ -8,6 +8,7 @@ export const register = async (req, res, next) => {
     const { name, email, password } = req.body;
 
     try {
+        console.log('Register Request Body:', req.body); // DEBUG LOG
         // Check if user exists
         const userExists = await User.findOne({ email });
 
@@ -41,7 +42,8 @@ export const register = async (req, res, next) => {
         })
 
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        console.error('Register Controller Error:', err); // DEBUG LOG
+        res.status(500).json({ success: false, message: err.message });
     }
 };
 

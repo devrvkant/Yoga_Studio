@@ -57,6 +57,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Routes
+app.get('/', (req, res) => {
+    res.send('Welcome to the Yoga Studio API...');
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/courses', courseRoutes);

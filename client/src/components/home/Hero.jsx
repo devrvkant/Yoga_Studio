@@ -1,8 +1,12 @@
 import { Button } from '../ui/Button'
 import { CalendarDays, Bot, ArrowDown } from 'lucide-react'
 import heroImg from '../../assets/images/hero.jpg'
+import { Link } from 'react-router-dom'
+import { useSelector } from 'react-redux'
+import { selectCurrentUser } from '../../features/auth/authSlice'
 
 export function Hero() {
+  const user = useSelector(selectCurrentUser)
   return (
     <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -25,20 +29,36 @@ export function Hero() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          <Button
-            size="lg"
-            className="rounded-full text-base px-8 h-12 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 bg-primary hover:bg-primary-dark text-white gap-2 border-0"
-          >
-            <CalendarDays size={18} />
-            Book a Class
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="rounded-full text-base px-8 h-12 border-2 border-primary text-primary hover:bg-primary hover:text-white bg-transparent transition-all duration-300"
-          >
-            Learn More
-          </Button>
+          {user ? (
+            <Link to="/classes">
+              <Button
+                size="lg"
+                className="rounded-full text-base px-8 h-12 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 bg-primary hover:bg-primary-dark text-white gap-2 border-0"
+              >
+                <CalendarDays size={18} />
+                Book a Class
+              </Button>
+            </Link>
+          ) : (
+            <Link to="/register">
+              <Button
+                size="lg"
+                className="rounded-full text-base px-8 h-12 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 bg-primary hover:bg-primary-dark text-white gap-2 border-0"
+              >
+                Start Your Journey
+              </Button>
+            </Link>
+          )}
+
+          <Link to="/about">
+            <Button
+              variant="outline"
+              size="lg"
+              className="rounded-full text-base px-8 h-12 border-2 border-primary text-primary hover:bg-primary hover:text-white bg-transparent transition-all duration-300"
+            >
+              Learn More
+            </Button>
+          </Link>
         </div>
       </div>
 
