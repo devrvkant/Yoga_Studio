@@ -16,6 +16,7 @@ import { ContactPage } from './pages/ContactPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import Enrollments from './pages/admin/Enrollments';
 import ManageClasses from './pages/admin/ManageClasses';
 import ManageCourses from './pages/admin/ManageCourses';
 import AdminLayout from './components/admin/AdminLayout';
@@ -67,22 +68,23 @@ function App() {
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/contact" element={<ContactPage />} />
 
-            {/* Auth Routes (Public Only) */}
-            <Route element={<PublicOnly />}>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-            </Route>
-
             {/* Protected User Routes */}
             <Route element={<RequireAuth />}>
               {/* <Route path="/profile" element={<ProfilePage />} /> */}
             </Route>
           </Route>
 
+          {/* Auth Routes (Standalone Layout) */}
+          <Route element={<PublicOnly />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Route>
+
           {/* Admin Routes (Standalone Layout) */}
           <Route element={<RequireAdmin />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
+              <Route path="enrollments" element={<Enrollments />} />
               <Route path="classes" element={<ManageClasses />} />
               <Route path="courses" element={<ManageCourses />} />
             </Route>

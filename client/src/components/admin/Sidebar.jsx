@@ -20,8 +20,13 @@ const Sidebar = () => {
             path: '/admin',
         },
         {
+            title: 'Enrollments',
+            icon: Users,
+            path: '/admin/enrollments',
+        },
+        {
             title: 'Manage Classes',
-            icon: Users, // Using Users icon temporarily, maybe Calendar or ListVideo is better?
+            icon: Users, // Can change icon if needed, maybe 'Dumbbell' or 'Calendar'
             path: '/admin/classes',
         },
         {
