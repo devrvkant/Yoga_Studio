@@ -19,6 +19,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import Enrollments from './pages/admin/Enrollments';
 import ManageClasses from './pages/admin/ManageClasses';
 import ManageCourses from './pages/admin/ManageCourses';
+import ManageSessions from './pages/admin/ManageSessions';
 import AdminLayout from './components/admin/AdminLayout';
 import MainLayout from './components/layout/MainLayout';
 import RequireAdmin from './components/layout/RequireAdmin';
@@ -87,6 +88,7 @@ function App() {
               <Route path="enrollments" element={<Enrollments />} />
               <Route path="classes" element={<ManageClasses />} />
               <Route path="courses" element={<ManageCourses />} />
+              <Route path="courses/:courseId/sessions" element={<ManageSessions />} />
             </Route>
           </Route>
         </Routes>

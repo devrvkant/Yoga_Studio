@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
     useGetCoursesQuery,
     useAddCourseMutation,
     useUpdateCourseMutation,
     useDeleteCourseMutation
 } from '../../features/admin/course/courseApi';
-import { Loader2, Plus, Pencil, Trash2, X, Check, Search, BookOpen } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, X, Check, Search, BookOpen, Video } from 'lucide-react';
 import { toast } from 'sonner';
 import FileUpload from '../../components/common/FileUpload';
 import { uploadToCloudinary } from '../../utils/uploadMedia';
@@ -121,7 +122,10 @@ const ManageCourses = () => {
         handleBackgroundSubmit(formData, !!editingCourse, editingCourse?._id);
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (e, id) => {
+        e.preventDefault();
+        e.stopPropagation();
+
         if (window.confirm('Are you sure you want to delete this course?')) {
             try {
                 await deleteCourse(id).unwrap();
@@ -149,6 +153,7 @@ const ManageCourses = () => {
                     <p className="text-muted-foreground mt-1">Create and manage your courses and workshops</p>
                 </div>
                 <button
+                    type="button"
                     onClick={() => handleOpenModal()}
                     className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
                 >
@@ -218,7 +223,16 @@ const ManageCourses = () => {
                                         <td className="px-6 py-4">{course.sessions || '-'}</td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
+                                                <Link
+                                                    to={`/admin/courses/${course._id}/sessions`}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 rounded-md transition-colors"
+                                                    title="Manage Sessions"
+                                                >
+                                                    <Video size={14} />
+                                                    Sessions
+                                                </Link>
                                                 <button
+                                                    type="button"
                                                     onClick={() => handleOpenModal(course)}
                                                     className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-primary transition-colors"
                                                     title="Edit"
@@ -226,7 +240,8 @@ const ManageCourses = () => {
                                                     <Pencil size={18} />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(course._id)}
+                                                    type="button"
+                                                    onClick={(e) => handleDelete(e, course._id)}
                                                     className="p-2 hover:bg-red-50 rounded-full text-muted-foreground hover:text-red-600 transition-colors"
                                                     title="Delete"
                                                 >
@@ -251,6 +266,7 @@ const ManageCourses = () => {
                                 {editingCourse ? 'Edit Course' : 'Add New Course'}
                             </h2>
                             <button
+                                type="button"
                                 onClick={handleCloseModal}
                                 className="text-muted-foreground hover:text-foreground transition-colors"
                             >
