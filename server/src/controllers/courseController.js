@@ -1,4 +1,5 @@
 import Course from '../models/Course.js';
+import { cleanupCourseAssets, rollbackUploads, extractPublicId } from '../services/cloudinaryService.js';
 
 // @desc    Get all courses
 // @route   GET /api/courses
@@ -33,10 +34,38 @@ export const getCourse = async (req, res, next) => {
 // @route   POST /api/courses
 // @access  Private (Admin)
 export const createCourse = async (req, res, next) => {
+    const uploadedAssets = [];
+
     try {
+        // Track uploaded assets for potential rollback
+        if (req.body.videos && Array.isArray(req.body.videos)) {
+            req.body.videos.forEach(videoItem => {
+                if (videoItem.url) {
+                    const videoPublicId = extractPublicId(videoItem.url);
+                    if (videoPublicId) {
+                        uploadedAssets.push({ publicId: videoPublicId, resourceType: 'video' });
+                    }
+                }
+                if (videoItem.thumbnail) {
+                    const thumbnailPublicId = extractPublicId(videoItem.thumbnail);
+                    if (thumbnailPublicId) {
+                        uploadedAssets.push({ publicId: thumbnailPublicId, resourceType: 'image' });
+                    }
+                }
+            });
+        }
+
+        // Create course in database
         const course = await Course.create(req.body);
         res.status(201).json({ success: true, data: course });
     } catch (err) {
+        // Rollback: Delete uploaded assets from Cloudinary if DB operation failed
+        if (uploadedAssets.length > 0) {
+            console.log('DB error occurred, rolling back Cloudinary uploads...');
+            await rollbackUploads(uploadedAssets).catch(rollbackErr => {
+                console.error('Rollback failed:', rollbackErr);
+            });
+        }
         res.status(400).json({ success: false, error: err.message });
     }
 };
@@ -45,18 +74,75 @@ export const createCourse = async (req, res, next) => {
 // @route   PUT /api/courses/:id
 // @access  Private (Admin)
 export const updateCourse = async (req, res, next) => {
+    const newUploadedAssets = [];
+    const oldAssets = [];
+
     try {
+        // Get the existing course to track old assets
+        const existingCourse = await Course.findById(req.params.id);
+        if (!existingCourse) {
+            return res.status(404).json({ success: false, message: 'Course not found' });
+        }
+
+        // Track assets that will be replaced (simplified - tracks new videos)
+        if (req.body.videos && Array.isArray(req.body.videos)) {
+            // Track new uploads
+            req.body.videos.forEach(videoItem => {
+                if (videoItem.url) {
+                    const videoPublicId = extractPublicId(videoItem.url);
+                    if (videoPublicId) {
+                        newUploadedAssets.push({ publicId: videoPublicId, resourceType: 'video' });
+                    }
+                }
+                if (videoItem.thumbnail) {
+                    const thumbnailPublicId = extractPublicId(videoItem.thumbnail);
+                    if (thumbnailPublicId) {
+                        newUploadedAssets.push({ publicId: thumbnailPublicId, resourceType: 'image' });
+                    }
+                }
+            });
+
+            // Track old videos for cleanup (if completely replacing videos array)
+            if (existingCourse.videos && Array.isArray(existingCourse.videos)) {
+                existingCourse.videos.forEach(oldVideoItem => {
+                    if (oldVideoItem.url) {
+                        const oldVideoId = extractPublicId(oldVideoItem.url);
+                        if (oldVideoId) {
+                            oldAssets.push({ publicId: oldVideoId, resourceType: 'video' });
+                        }
+                    }
+                    if (oldVideoItem.thumbnail) {
+                        const oldThumbnailId = extractPublicId(oldVideoItem.thumbnail);
+                        if (oldThumbnailId) {
+                            oldAssets.push({ publicId: oldThumbnailId, resourceType: 'image' });
+                        }
+                    }
+                });
+            }
+        }
+
+        // Update course in database
         const course = await Course.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true
         });
 
-        if (!course) {
-            return res.status(404).json({ success: false, message: 'Course not found' });
+        // Delete old assets from Cloudinary after successful update
+        if (oldAssets.length > 0) {
+            await rollbackUploads(oldAssets).catch(cleanupErr => {
+                console.error('Error cleaning up old course assets:', cleanupErr);
+            });
         }
 
         res.status(200).json({ success: true, data: course });
     } catch (err) {
+        // Rollback: Delete new uploaded assets from Cloudinary if DB update failed
+        if (newUploadedAssets.length > 0) {
+            console.log('DB update error occurred, rolling back new Cloudinary uploads...');
+            await rollbackUploads(newUploadedAssets).catch(rollbackErr => {
+                console.error('Rollback failed:', rollbackErr);
+            });
+        }
         res.status(400).json({ success: false, error: err.message });
     }
 };
@@ -71,6 +157,12 @@ export const deleteCourse = async (req, res, next) => {
         if (!course) {
             return res.status(404).json({ success: false, message: 'Course not found' });
         }
+
+        // Clean up all associated Cloudinary assets (videos and thumbnails)
+        await cleanupCourseAssets(course).catch(cleanupErr => {
+            console.error('Error cleaning up course assets from Cloudinary:', cleanupErr);
+            // Don't fail the delete operation if Cloudinary cleanup fails
+        });
 
         res.status(200).json({ success: true, data: {} });
     } catch (err) {

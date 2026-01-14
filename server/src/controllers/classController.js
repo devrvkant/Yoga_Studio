@@ -1,4 +1,5 @@
 import Class from '../models/Class.js';
+import { cleanupClassAssets, rollbackUploads, extractPublicId } from '../services/cloudinaryService.js';
 
 // @desc    Get all classes
 // @route   GET /api/classes
@@ -33,10 +34,34 @@ export const getClass = async (req, res, next) => {
 // @route   POST /api/classes
 // @access  Private (Admin)
 export const createClass = async (req, res, next) => {
+    const uploadedAssets = [];
+
     try {
+        // Track uploaded assets for potential rollback
+        if (req.body.image) {
+            const imagePublicId = extractPublicId(req.body.image);
+            if (imagePublicId) {
+                uploadedAssets.push({ publicId: imagePublicId, resourceType: 'image' });
+            }
+        }
+        if (req.body.video) {
+            const videoPublicId = extractPublicId(req.body.video);
+            if (videoPublicId) {
+                uploadedAssets.push({ publicId: videoPublicId, resourceType: 'video' });
+            }
+        }
+
+        // Create class in database
         const yogaClass = await Class.create(req.body);
         res.status(201).json({ success: true, data: yogaClass });
     } catch (err) {
+        // Rollback: Delete uploaded assets from Cloudinary if DB operation failed
+        if (uploadedAssets.length > 0) {
+            console.log('DB error occurred, rolling back Cloudinary uploads...');
+            await rollbackUploads(uploadedAssets).catch(rollbackErr => {
+                console.error('Rollback failed:', rollbackErr);
+            });
+        }
         res.status(400).json({ success: false, error: err.message });
     }
 };
@@ -45,18 +70,81 @@ export const createClass = async (req, res, next) => {
 // @route   PUT /api/classes/:id
 // @access  Private (Admin)
 export const updateClass = async (req, res, next) => {
+    const newUploadedAssets = [];
+    const oldAssets = [];
+
     try {
+        // Get the existing class to track old assets
+        const existingClass = await Class.findById(req.params.id);
+        if (!existingClass) {
+            return res.status(404).json({ success: false, message: 'Class not found' });
+        }
+
+        // Track old assets that will be replaced
+        console.log('=== CLASS UPDATE - Asset Change Detection ===');
+        console.log('Existing image:', existingClass.image);
+        console.log('New image:', req.body.image);
+        console.log('Existing video:', existingClass.video);
+        console.log('New video:', req.body.video);
+
+        if (req.body.image && req.body.image !== existingClass.image) {
+            console.log('IMAGE CHANGED - Will cleanup old image');
+            if (existingClass.image && existingClass.image !== 'default-class.jpg') {
+                const oldImageId = extractPublicId(existingClass.image);
+                console.log('Old image public_id:', oldImageId);
+                if (oldImageId) {
+                    oldAssets.push({ publicId: oldImageId, resourceType: 'image' });
+                }
+            }
+            const newImageId = extractPublicId(req.body.image);
+            if (newImageId) {
+                newUploadedAssets.push({ publicId: newImageId, resourceType: 'image' });
+            }
+        }
+        if (req.body.video && req.body.video !== existingClass.video) {
+            console.log('VIDEO CHANGED - Will cleanup old video');
+            if (existingClass.video) {
+                const oldVideoId = extractPublicId(existingClass.video);
+                console.log('Old video public_id:', oldVideoId);
+                if (oldVideoId) {
+                    oldAssets.push({ publicId: oldVideoId, resourceType: 'video' });
+                }
+            }
+            const newVideoId = extractPublicId(req.body.video);
+            if (newVideoId) {
+                newUploadedAssets.push({ publicId: newVideoId, resourceType: 'video' });
+            }
+        }
+
+        console.log('Old assets to cleanup:', oldAssets);
+        console.log('New assets uploaded:', newUploadedAssets);
+
+        // Update class in database
         const yogaClass = await Class.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true
         });
 
-        if (!yogaClass) {
-            return res.status(404).json({ success: false, message: 'Class not found' });
+        // Delete old assets from Cloudinary after successful update
+        if (oldAssets.length > 0) {
+            console.log('EXECUTING CLOUDINARY CLEANUP for old assets...');
+            await rollbackUploads(oldAssets).catch(cleanupErr => {
+                console.error('Error cleaning up old assets:', cleanupErr);
+            });
+            console.log('Cloudinary cleanup completed');
+        } else {
+            console.log('No old assets to cleanup');
         }
 
         res.status(200).json({ success: true, data: yogaClass });
     } catch (err) {
+        // Rollback: Delete new uploaded assets from Cloudinary if DB update failed
+        if (newUploadedAssets.length > 0) {
+            console.log('DB update error occurred, rolling back new Cloudinary uploads...');
+            await rollbackUploads(newUploadedAssets).catch(rollbackErr => {
+                console.error('Rollback failed:', rollbackErr);
+            });
+        }
         res.status(400).json({ success: false, error: err.message });
     }
 };
@@ -71,6 +159,12 @@ export const deleteClass = async (req, res, next) => {
         if (!yogaClass) {
             return res.status(404).json({ success: false, message: 'Class not found' });
         }
+
+        // Clean up all associated Cloudinary assets
+        await cleanupClassAssets(yogaClass).catch(cleanupErr => {
+            console.error('Error cleaning up class assets from Cloudinary:', cleanupErr);
+            // Don't fail the delete operation if Cloudinary cleanup fails
+        });
 
         res.status(200).json({ success: true, data: {} });
     } catch (err) {
