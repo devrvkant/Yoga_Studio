@@ -44,13 +44,13 @@ const AdminDashboard = () => {
     ];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             <div>
                 <h1 className="text-3xl font-display font-bold text-foreground">Dashboard Overview</h1>
                 <p className="text-muted-foreground mt-1">Welcome back, Admin</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.map((stat, index) => (
                     <StatCard key={index} {...stat} />
                 ))}
