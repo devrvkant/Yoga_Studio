@@ -110,17 +110,35 @@ export const getMe = async (req, res) => {
 };
 
 // @desc    Get all users (Admin only)
-// @route   GET /api/auth/users
+// @route   GET /api/auth/users?page=1&limit=20
 // @access  Private/Admin
 export const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find({})
+        // Get pagination params from query
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 11;
+        const skip = (page - 1) * limit;
+
+        // Exclude admin users
+        const query = { role: { $ne: 'admin' } };
+
+        // Get total count for pagination metadata
+        const totalUsers = await User.countDocuments(query);
+
+        // Fetch paginated users
+        const users = await User.find(query)
             .populate('enrolledClasses', 'title')
-            .populate('enrolledCourses', 'title');
+            .populate('enrolledCourses', 'title')
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 }); // Most recent first
 
         res.status(200).json({
             success: true,
             count: users.length,
+            total: totalUsers,
+            page,
+            pages: Math.ceil(totalUsers / limit),
             data: users
         });
     } catch (err) {

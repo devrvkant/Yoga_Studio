@@ -28,7 +28,7 @@ export const authApi = createApi({
             query: () => '/api/auth/me',
         }),
         getUsers: builder.query({
-            query: () => '/api/auth/users',
+            query: ({ page = 1, limit = 20 } = {}) => `/api/auth/users?page=${page}&limit=${limit}`,
             providesTags: ['User'],
         }),
     }),
