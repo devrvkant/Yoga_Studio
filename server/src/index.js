@@ -1,5 +1,7 @@
+// Load environment variables FIRST - must be the first import
+import env from './config/env.js';
+
 import express from 'express';
-import dotenv from 'dotenv';
 import passport from 'passport';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
@@ -9,10 +11,9 @@ import connectDB from './config/db.js';
 import passportConfig from './config/passport.js';
 import authRoutes from './routes/authRoutes.js';
 import classRoutes from './routes/classRoutes.js';
-import courseRoutes from './routes/courseRoutes.js'
+import courseRoutes from './routes/courseRoutes.js';
+import sessionRoutes from './routes/sessionRoutes.js';
 
-// Load env vars
-dotenv.config({ path: '../server/.env' }); // Adjusted path if running from root, or just .env if inside server
 
 // Passport config
 passportConfig(passport);
@@ -39,15 +40,15 @@ app.use(cors({
 // Sessions
 app.use(
     session({
-        secret: process.env.SESSION_SECRET || 'secret',
+        secret: env.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
-        store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
+        store: MongoStore.create({ mongoUrl: env.MONGO_URI }),
         cookie: {
             maxAge: 1000 * 60 * 60 * 24, // 1 day
             httpOnly: true, // Secure cookie, cannot be accessed by JS
-            secure: process.env.NODE_ENV === 'production', // true in production
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // 'none' for cross-site (if needed) or 'lax'
+            secure: env.NODE_ENV === 'production', // true in production
+            sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax' // 'none' for cross-site (if needed) or 'lax'
         }
     })
 );
@@ -63,8 +64,9 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api/courses/:courseId/sessions', sessionRoutes);
 
-const PORT = process.env.PORT || 5000;
+const PORT = env.PORT;
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
