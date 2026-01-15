@@ -20,6 +20,8 @@ import Enrollments from './pages/admin/Enrollments';
 import ManageClasses from './pages/admin/ManageClasses';
 import ManageCourses from './pages/admin/ManageCourses';
 import ManageSessions from './pages/admin/ManageSessions';
+import { CoursePlayerPage } from './pages/CoursePlayerPage';
+import { StudentDashboard } from './pages/student/StudentDashboard';
 import AdminLayout from './components/admin/AdminLayout';
 import MainLayout from './components/layout/MainLayout';
 import RequireAdmin from './components/layout/RequireAdmin';
@@ -71,6 +73,8 @@ function App() {
 
             {/* Protected User Routes */}
             <Route element={<RequireAuth />}>
+              <Route path="/dashboard" element={<StudentDashboard />} />
+              <Route path="/courses/:courseId" element={<CoursePlayerPage />} />
               {/* <Route path="/profile" element={<ProfilePage />} /> */}
             </Route>
           </Route>

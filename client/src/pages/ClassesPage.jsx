@@ -1,81 +1,59 @@
 import { useState } from 'react'
 import { Clock, Users, ArrowRight, User } from 'lucide-react'
 import { Button } from '../components/ui/Button'
-import instructorImg from '../assets/images/instructor.jpg'
-import hathaImg from '../assets/images/hatha_yoga.jpg'
-import vinyasaImg from '../assets/images/vinyasa_flow.jpg'
-import powerImg from '../assets/images/power_yoga.jpg'
-import yinImg from '../assets/images/yin_yoga.jpg'
-import prenatalImg from '../assets/images/prenetal_yoga.jpg'
-import restorativeImg from '../assets/images/restorative_yoga.jpg'
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useGetClassesQuery, useEnrollClassMutation } from '../features/admin/class/classApi';
+import { useGetMeQuery } from '../features/auth/authApi';
+import EmptyState from '../components/common/EmptyState';
 
 export function ClassesPage() {
     const [activeFilter, setActiveFilter] = useState("All Classes")
+    const { data: classesData, isLoading } = useGetClassesQuery();
+    const { data: userData, refetch: refetchUser } = useGetMeQuery();
+    const [enrollClass] = useEnrollClassMutation();
+    const navigate = useNavigate();
 
-    const filters = ["All Classes", "Beginner", "Intermediate", "Advanced", "Specialty"]
+    const classes = classesData?.data || [];
+    const enrolledClassIds = userData?.data?.enrolledClasses?.map(c => c._id) || [];
+    const filters = ["All Classes", "Beginner", "Intermediate", "Advanced"];
 
-    const classes = [
-        {
-            id: 1,
-            title: "Hatha Yoga",
-            level: "Beginner",
-            duration: "60 min",
-            instructor: "Sarah Chen",
-            image: hathaImg,
-            desc: "A gentle introduction to basic yoga postures and breathing techniques. Perfect for beginners looking to start their yoga journey."
-        },
-        {
-            id: 2,
-            title: "Vinyasa Flow",
-            level: "Intermediate",
-            duration: "75 min",
-            instructor: "Sarah Chen",
-            image: vinyasaImg,
-            desc: "Dynamic flowing sequences that link breath with movement. Build strength, flexibility, and endurance through continuous flow."
-        },
-        {
-            id: 3,
-            title: "Power Yoga",
-            level: "Advanced",
-            duration: "90 min",
-            instructor: "Sarah Chen",
-            image: powerImg,
-            desc: "Intense, athletic-style yoga that builds strength and stamina. Challenge yourself with advanced poses and inversions."
-        },
-        {
-            id: 4,
-            title: "Yin Yoga",
-            level: "All Levels",
-            duration: "75 min",
-            instructor: "Sarah Chen",
-            image: yinImg,
-            desc: "Slow-paced practice with poses held for longer periods. Deep relaxation, flexibility, and stress relief."
-        },
-        {
-            id: 5,
-            title: "Prenatal Yoga",
-            level: "All Levels",
-            duration: "60 min",
-            instructor: "Sarah Chen",
-            image: prenatalImg,
-            desc: "Safe and gentle yoga practice designed specifically for expecting mothers. Modified poses for comfort and safety."
-        },
-        {
-            id: 6,
-            title: "Restorative Yoga",
-            level: "All Levels",
-            duration: "60 min",
-            instructor: "Sarah Chen",
-            image: restorativeImg,
-            desc: "Deeply relaxing practice using props to support the body in restful poses. Perfect for stress relief and healing."
+    const handleEnroll = async (cls) => {
+        if (!userData) {
+            toast.error("Please login to enroll");
+            navigate('/login');
+            return;
         }
-    ]
+
+        if (enrolledClassIds.includes(cls._id)) {
+            toast.info("You are already enrolled in this class");
+            return;
+        }
+
+        if (cls.isPaid) {
+            toast("Premium Content", {
+                description: "Enrollment for paid classes is coming soon!",
+                action: {
+                    label: "Contact Us",
+                    onClick: () => navigate('/contact')
+                }
+            });
+            return;
+        }
+
+        const toastId = toast.loading("Booking class...");
+        try {
+            await enrollClass(cls._id).unwrap();
+            await refetchUser(); // Refresh user data
+            toast.success("Class booked successfully!", { id: toastId });
+        } catch (err) {
+            toast.error(err?.data?.message || "Booking failed", { id: toastId });
+        }
+    };
 
     const filteredClasses = activeFilter === "All Classes"
         ? classes
-        : activeFilter === "Specialty"
-            ? classes.filter(c => c.level === "All Levels")
-            : classes.filter(c => c.level === activeFilter)
+        : classes.filter(c => c.level === activeFilter)
 
 
     return (
@@ -120,64 +98,92 @@ export function ClassesPage() {
             {/* Classes Grid */}
             <section className="py-24 bg-background">
                 <div className="container mx-auto px-6 max-w-7xl">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {filteredClasses.map((item) => (
-                            <div key={item.id} className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-border-soft flex flex-col relative">
-                                {/* Level Badge */}
-                                <div className="absolute top-4 right-4 z-10">
-                                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider ${item.level === "Beginner" ? "bg-emerald-500" :
-                                        item.level === "Intermediate" ? "bg-teal-600" :
-                                            item.level === "Advanced" ? "bg-slate-800" :
-                                                "bg-emerald-600" // Default/All Levels
-                                        }`}>
-                                        {item.level}
-                                    </span>
-                                </div>
-
-                                <div className="relative h-64 overflow-hidden">
-                                    <img
-                                        src={item.image}
-                                        alt={item.title}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                    />
-                                </div>
-
-                                <div className="p-8 flex flex-col flex-grow">
-                                    <div className="flex items-center gap-4 text-xs font-medium text-muted mb-4 uppercase tracking-wide">
-                                        <div className="flex items-center gap-1.5">
-                                            <Clock size={14} />
-                                            {item.duration}
+                    {isLoading ? (
+                        <div className="flex justify-center py-20">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                        </div>
+                    ) : filteredClasses.length === 0 ? (
+                        <EmptyState
+                            title="No classes found"
+                            description={`We couldn't find any ${activeFilter.toLowerCase()} at the moment.`}
+                            actionLabel="Clear Filters"
+                            onAction={() => setActiveFilter("All Classes")}
+                        />
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {filteredClasses.map((item) => {
+                                const isEnrolled = enrolledClassIds.includes(item._id);
+                                return (
+                                    <div key={item._id} className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-border-soft flex flex-col relative h-full">
+                                        {/* Premium/Free Badge */}
+                                        <div className="absolute top-4 left-4 z-10">
+                                            <span className={`px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider ${item.isPaid ? 'bg-primary' : 'bg-emerald-500'}`}>
+                                                {item.isPaid ? 'Premium' : 'Free'}
+                                            </span>
                                         </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <Users size={14} />
-                                            {item.level}
+
+                                        {/* Level Badge */}
+                                        <div className="absolute top-4 right-4 z-10">
+                                            <span className={`px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider ${item.level === "Beginner" ? "bg-emerald-500" :
+                                                item.level === "Intermediate" ? "bg-teal-600" :
+                                                    item.level === "Advanced" ? "bg-slate-800" :
+                                                        "bg-emerald-600" // Default/All Levels
+                                                }`}>
+                                                {item.level}
+                                            </span>
                                         </div>
-                                    </div>
 
-                                    <h3 className="text-2xl font-display font-bold text-foreground mb-3">{item.title}</h3>
-                                    <p className="text-muted leading-relaxed mb-6 font-light text-sm flex-grow">
-                                        {item.desc}
-                                    </p>
+                                        <div className="relative h-64 overflow-hidden">
+                                            <img
+                                                src={item.image}
+                                                alt={item.title}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                            />
+                                        </div>
 
-                                    <div className="flex items-center justify-between mt-auto pt-6 border-t border-border-soft/60 mb-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100">
-                                                <img src={instructorImg} alt={item.instructor} className="w-full h-full object-cover" />
+                                        <div className="p-8 flex flex-col flex-grow">
+                                            <div className="flex items-center gap-4 text-xs font-medium text-muted mb-4 uppercase tracking-wide">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Clock size={14} />
+                                                    {item.duration}
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Users size={14} />
+                                                    {item.level}
+                                                </div>
                                             </div>
-                                            <span className="text-sm font-medium text-foreground">{item.instructor}</span>
-                                        </div>
-                                        <button className="text-primary text-sm font-semibold hover:text-primary-dark transition-colors flex items-center gap-1">
-                                            Learn More <ArrowRight size={14} />
-                                        </button>
-                                    </div>
 
-                                    <Button className="w-full rounded-lg font-semibold py-6" variant="default">
-                                        Book This Class
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                                            <h3 className="text-2xl font-display font-bold text-foreground mb-3">{item.title}</h3>
+                                            <p className="text-muted leading-relaxed mb-6 font-light text-sm flex-grow line-clamp-3">
+                                                {item.description}
+                                            </p>
+
+                                            <div className="flex items-center justify-between mt-auto pt-6 border-t border-border-soft/60 mb-6">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                                                        <User size={16} className="text-gray-500" />
+                                                    </div>
+                                                    <span className="text-sm font-medium text-foreground">{item.instructor}</span>
+                                                </div>
+                                                <div className="text-lg font-bold text-primary">
+                                                    {item.isPaid ? `€${item.price}` : 'Free'}
+                                                </div>
+                                            </div>
+
+                                            <Button
+                                                className={`w-full rounded-lg font-semibold py-6 ${isEnrolled ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : ''}`}
+                                                variant={isEnrolled ? "outline" : "default"}
+                                                onClick={() => !isEnrolled && handleEnroll(item)}
+                                                disabled={isEnrolled}
+                                            >
+                                                {isEnrolled ? 'Booked' : item.isPaid ? 'Book Class' : 'Book Free Class'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </section>
 
@@ -190,3 +196,4 @@ export function ClassesPage() {
         </div>
     )
 }
+
