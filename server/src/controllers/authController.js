@@ -116,60 +116,129 @@ export const getMe = async (req, res) => {
 // @access  Private/Admin
 export const getAllUsers = async (req, res) => {
     try {
-        // Get pagination params from query
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 11;
         const skip = (page - 1) * limit;
         const { status } = req.query;
 
-        // Base query: Exclude admin users
-        let query = { role: { $ne: 'admin' } };
+        let users, totalUsers;
 
-        // Apply status filter if present
-        if (status === 'premium') {
-            // Users with at least one PAID enrollment
-            query.$or = [
-                { 'enrolledClasses': { $exists: true, $not: { $size: 0 } } },
-                { 'enrolledCourses': { $exists: true, $not: { $size: 0 } } }
+        if (status === 'premium' || status === 'active') {
+            // Use aggregation for premium/active filters to check isPaid before pagination
+            const pipeline = [
+                // Match: Exclude admin users
+                { $match: { role: { $ne: 'admin' } } },
+
+                // Lookup enrolledClasses
+                {
+                    $lookup: {
+                        from: 'classes',
+                        localField: 'enrolledClasses',
+                        foreignField: '_id',
+                        as: 'classDetails'
+                    }
+                },
+
+                // Lookup enrolledCourses
+                {
+                    $lookup: {
+                        from: 'courses',
+                        localField: 'enrolledCourses',
+                        foreignField: '_id',
+                        as: 'courseDetails'
+                    }
+                },
+
+                // Add fields to determine if user has paid enrollments
+                {
+                    $addFields: {
+                        hasPaidClass: {
+                            $in: [true, '$classDetails.isPaid']
+                        },
+                        hasPaidCourse: {
+                            $in: [true, '$courseDetails.isPaid']
+                        },
+                        hasPaid: {
+                            $or: [
+                                { $in: [true, '$classDetails.isPaid'] },
+                                { $in: [true, '$courseDetails.isPaid'] }
+                            ]
+                        },
+                        hasEnrollments: {
+                            $or: [
+                                { $gt: [{ $size: '$enrolledClasses' }, 0] },
+                                { $gt: [{ $size: '$enrolledCourses' }, 0] }
+                            ]
+                        }
+                    }
+                },
+
+                // Filter based on status
+                {
+                    $match: status === 'premium'
+                        ? { hasPaid: true }
+                        : { hasEnrollments: true, hasPaid: false }
+                }
             ];
-        } else if (status === 'active') {
-            // Users with at least one FREE enrollment (will be filtered in application logic)
-            query.$or = [
-                { 'enrolledClasses': { $exists: true, $not: { $size: 0 } } },
-                { 'enrolledCourses': { $exists: true, $not: { $size: 0 } } }
+
+            // Get total count
+            const countPipeline = [...pipeline, { $count: 'total' }];
+            const countResult = await User.aggregate(countPipeline);
+            totalUsers = countResult[0]?.total || 0;
+
+            // Get paginated results
+            const resultPipeline = [
+                ...pipeline,
+                { $sort: { createdAt: -1 } },
+                { $skip: skip },
+                { $limit: limit },
+                // Populate with limited fields
+                {
+                    $project: {
+                        name: 1,
+                        email: 1,
+                        role: 1,
+                        createdAt: 1,
+                        enrolledClasses: 1,
+                        enrolledCourses: 1,
+                        classDetails: { _id: 1, title: 1, isPaid: 1 },
+                        courseDetails: { _id: 1, title: 1, isPaid: 1 }
+                    }
+                }
             ];
+
+            const aggregatedUsers = await User.aggregate(resultPipeline);
+
+            // Populate the references properly for the response
+            users = await User.populate(aggregatedUsers, [
+                { path: 'enrolledClasses', select: 'title isPaid' },
+                { path: 'enrolledCourses', select: 'title isPaid' }
+            ]);
+
         } else if (status === 'registered') {
-            // Users with NO enrollments
-            query.enrolledClasses = { $size: 0 };
-            query.enrolledCourses = { $size: 0 };
-        }
+            // Users with NO enrollments - simple query
+            const query = {
+                role: { $ne: 'admin' },
+                enrolledClasses: { $size: 0 },
+                enrolledCourses: { $size: 0 }
+            };
 
-        // Get total count for pagination metadata
-        const totalUsers = await User.countDocuments(query);
+            totalUsers = await User.countDocuments(query);
+            users = await User.find(query)
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 });
 
-        // Fetch paginated users
-        let users = await User.find(query)
-            .populate('enrolledClasses', 'title isPaid')
-            .populate('enrolledCourses', 'title isPaid')
-            .skip(skip)
-            .limit(limit)
-            .sort({ createdAt: -1 }); // Most recent first
-
-        // Post-query filtering for premium vs active
-        if (status === 'premium') {
-            // Keep only users with at least one PAID enrollment
-            users = users.filter(user =>
-                user.enrolledClasses?.some(c => c.isPaid) ||
-                user.enrolledCourses?.some(c => c.isPaid)
-            );
-        } else if (status === 'active') {
-            // Keep only users with FREE enrollments (no paid)
-            users = users.filter(user => {
-                const hasPaid = user.enrolledClasses?.some(c => c.isPaid) ||
-                    user.enrolledCourses?.some(c => c.isPaid);
-                const hasEnrollments = (user.enrolledClasses?.length > 0 || user.enrolledCourses?.length > 0);
-                return hasEnrollments && !hasPaid;
-            });
+        } else {
+            // All users (no filter)
+            const query = { role: { $ne: 'admin' } };
+            totalUsers = await User.countDocuments(query);
+            users = await User.find(query)
+                .populate('enrolledClasses', 'title isPaid')
+                .populate('enrolledCourses', 'title isPaid')
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 });
         }
 
         res.status(200).json({

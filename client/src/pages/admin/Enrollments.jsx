@@ -60,7 +60,7 @@ const Enrollments = () => {
                             className="pl-9 pr-8 py-2 bg-background border border-input rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer shadow-sm hover:bg-muted/50 transition-colors"
                         >
                             <option value="all">All Users</option>
-                            <option value="premium">Premium Users</option>
+                            <option value="premium">Premium Students</option>
                             <option value="active">Active Students</option>
                             <option value="registered">Registered Users</option>
                         </select>
