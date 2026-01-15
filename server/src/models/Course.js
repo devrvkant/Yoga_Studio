@@ -12,9 +12,18 @@ const courseSchema = new mongoose.Schema({
         required: [true, 'Please add a description'],
         maxlength: [500, 'Description can not be more than 500 characters']
     },
+    instructor: {
+        type: String,
+        default: 'Serenity Instructor'
+    },
+    isPaid: {
+        type: Boolean,
+        default: false
+    },
     price: {
         type: Number,
-        required: [true, 'Please add a price']
+        required: function () { return this.isPaid; },
+        default: 0
     },
     duration: {
         type: String, // e.g. "4 Weeks"
@@ -23,6 +32,12 @@ const courseSchema = new mongoose.Schema({
     sessions: {
         type: String, // e.g. "8 Sessions"
         required: [true, 'Please add session count']
+    },
+    level: {
+        type: String,
+        required: [true, 'Please add a difficulty level'],
+        enum: ['Beginner', 'Intermediate', 'Advanced', 'All Levels'],
+        default: 'All Levels'
     },
     image: {
         type: String,

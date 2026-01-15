@@ -87,7 +87,9 @@ export const updateClass = async (req, res, next) => {
         console.log('Existing video:', existingClass.video);
         console.log('New video:', req.body.video);
 
-        if (req.body.image && req.body.image !== existingClass.image) {
+        // Track image changes (including removal)
+        const imageChanged = 'image' in req.body && req.body.image !== existingClass.image;
+        if (imageChanged) {
             console.log('IMAGE CHANGED - Will cleanup old image');
             if (existingClass.image && existingClass.image !== 'default-class.jpg') {
                 const oldImageId = extractPublicId(existingClass.image);
@@ -96,12 +98,17 @@ export const updateClass = async (req, res, next) => {
                     oldAssets.push({ publicId: oldImageId, resourceType: 'image' });
                 }
             }
-            const newImageId = extractPublicId(req.body.image);
-            if (newImageId) {
-                newUploadedAssets.push({ publicId: newImageId, resourceType: 'image' });
+            if (req.body.image && req.body.image !== 'default-class.jpg') {
+                const newImageId = extractPublicId(req.body.image);
+                if (newImageId) {
+                    newUploadedAssets.push({ publicId: newImageId, resourceType: 'image' });
+                }
             }
         }
-        if (req.body.video && req.body.video !== existingClass.video) {
+
+        // Track video changes (including removal)
+        const videoChanged = 'video' in req.body && req.body.video !== existingClass.video;
+        if (videoChanged) {
             console.log('VIDEO CHANGED - Will cleanup old video');
             if (existingClass.video) {
                 const oldVideoId = extractPublicId(existingClass.video);
@@ -110,9 +117,11 @@ export const updateClass = async (req, res, next) => {
                     oldAssets.push({ publicId: oldVideoId, resourceType: 'video' });
                 }
             }
-            const newVideoId = extractPublicId(req.body.video);
-            if (newVideoId) {
-                newUploadedAssets.push({ publicId: newVideoId, resourceType: 'video' });
+            if (req.body.video) {
+                const newVideoId = extractPublicId(req.body.video);
+                if (newVideoId) {
+                    newUploadedAssets.push({ publicId: newVideoId, resourceType: 'video' });
+                }
             }
         }
 

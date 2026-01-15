@@ -113,35 +113,54 @@ export const updateSession = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Session not found' });
         }
 
-        // Track video changes
-        if (req.body.video && req.body.video !== existingSession.video) {
+        console.log('=== SESSION UPDATE - Asset Change Detection ===');
+        console.log('Existing video:', existingSession.video);
+        console.log('New video:', req.body.video);
+        console.log('Existing thumbnail:', existingSession.thumbnail);
+        console.log('New thumbnail:', req.body.thumbnail);
+
+        // Track video changes (including removal)
+        const videoChanged = 'video' in req.body && req.body.video !== existingSession.video;
+        if (videoChanged) {
             console.log('SESSION VIDEO CHANGED - Will cleanup old video');
+            // Cleanup old video if it exists
             if (existingSession.video) {
                 const oldVideoId = extractPublicId(existingSession.video);
                 if (oldVideoId) {
                     oldAssets.push({ publicId: oldVideoId, resourceType: 'video' });
                 }
             }
-            const newVideoId = extractPublicId(req.body.video);
-            if (newVideoId) {
-                newUploadedAssets.push({ publicId: newVideoId, resourceType: 'video' });
+            // Track new video for potential rollback
+            if (req.body.video) {
+                const newVideoId = extractPublicId(req.body.video);
+                if (newVideoId) {
+                    newUploadedAssets.push({ publicId: newVideoId, resourceType: 'video' });
+                }
             }
         }
 
-        // Track thumbnail changes
-        if (req.body.thumbnail && req.body.thumbnail !== existingSession.thumbnail) {
+        // Track thumbnail changes (including removal)
+        const thumbnailChanged = 'thumbnail' in req.body && req.body.thumbnail !== existingSession.thumbnail;
+        if (thumbnailChanged) {
             console.log('SESSION THUMBNAIL CHANGED - Will cleanup old thumbnail');
+            // Cleanup old thumbnail if it exists
             if (existingSession.thumbnail) {
                 const oldThumbnailId = extractPublicId(existingSession.thumbnail);
                 if (oldThumbnailId) {
                     oldAssets.push({ publicId: oldThumbnailId, resourceType: 'image' });
                 }
             }
-            const newThumbnailId = extractPublicId(req.body.thumbnail);
-            if (newThumbnailId) {
-                newUploadedAssets.push({ publicId: newThumbnailId, resourceType: 'image' });
+            // Track new thumbnail for potential rollback
+            if (req.body.thumbnail) {
+                const newThumbnailId = extractPublicId(req.body.thumbnail);
+                if (newThumbnailId) {
+                    newUploadedAssets.push({ publicId: newThumbnailId, resourceType: 'image' });
+                }
             }
         }
+
+        console.log('Old assets to cleanup:', oldAssets);
+        console.log('New assets uploaded:', newUploadedAssets);
 
         // Update session in database
         const session = await Session.findByIdAndUpdate(req.params.id, req.body, {
@@ -155,6 +174,9 @@ export const updateSession = async (req, res) => {
             await rollbackUploads(oldAssets).catch(cleanupErr => {
                 console.error('Error cleaning up old assets:', cleanupErr);
             });
+            console.log('Cloudinary cleanup completed');
+        } else {
+            console.log('No old assets to cleanup');
         }
 
         res.status(200).json({ success: true, data: session });

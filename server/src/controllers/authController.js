@@ -101,7 +101,9 @@ export const getMe = async (req, res) => {
         return res.status(401).json({ success: false, message: 'Not authorized' });
     }
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id)
+        .populate('enrolledClasses', 'title image instructor video duration level isPaid')
+        .populate('enrolledCourses', 'title image instructor price duration sessions isPaid');
 
     res.status(200).json({
         success: true,
@@ -118,17 +120,29 @@ export const getAllUsers = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 11;
         const skip = (page - 1) * limit;
+        const { status } = req.query;
 
-        // Exclude admin users
-        const query = { role: { $ne: 'admin' } };
+        // Base query: Exclude admin users
+        let query = { role: { $ne: 'admin' } };
+
+        // Apply status filter if present
+        if (status === 'premium') {
+            query.$or = [
+                { enrolledClasses: { $exists: true, $not: { $size: 0 } } },
+                { enrolledCourses: { $exists: true, $not: { $size: 0 } } }
+            ];
+        } else if (status === 'normal') {
+            query.enrolledClasses = { $size: 0 };
+            query.enrolledCourses = { $size: 0 };
+        }
 
         // Get total count for pagination metadata
         const totalUsers = await User.countDocuments(query);
 
         // Fetch paginated users
         const users = await User.find(query)
-            .populate('enrolledClasses', 'title')
-            .populate('enrolledCourses', 'title')
+            .populate('enrolledClasses', 'title isPaid')
+            .populate('enrolledCourses', 'title isPaid')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 }); // Most recent first

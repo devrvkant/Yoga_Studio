@@ -37,22 +37,12 @@ export const createCourse = async (req, res, next) => {
     const uploadedAssets = [];
 
     try {
-        // Track uploaded assets for potential rollback
-        if (req.body.videos && Array.isArray(req.body.videos)) {
-            req.body.videos.forEach(videoItem => {
-                if (videoItem.url) {
-                    const videoPublicId = extractPublicId(videoItem.url);
-                    if (videoPublicId) {
-                        uploadedAssets.push({ publicId: videoPublicId, resourceType: 'video' });
-                    }
-                }
-                if (videoItem.thumbnail) {
-                    const thumbnailPublicId = extractPublicId(videoItem.thumbnail);
-                    if (thumbnailPublicId) {
-                        uploadedAssets.push({ publicId: thumbnailPublicId, resourceType: 'image' });
-                    }
-                }
-            });
+        // Track uploaded image for potential rollback
+        if (req.body.image) {
+            const imagePublicId = extractPublicId(req.body.image);
+            if (imagePublicId) {
+                uploadedAssets.push({ publicId: imagePublicId, resourceType: 'image' });
+            }
         }
 
         // Create course in database
@@ -84,42 +74,33 @@ export const updateCourse = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Course not found' });
         }
 
-        // Track assets that will be replaced (simplified - tracks new videos)
-        if (req.body.videos && Array.isArray(req.body.videos)) {
-            // Track new uploads
-            req.body.videos.forEach(videoItem => {
-                if (videoItem.url) {
-                    const videoPublicId = extractPublicId(videoItem.url);
-                    if (videoPublicId) {
-                        newUploadedAssets.push({ publicId: videoPublicId, resourceType: 'video' });
-                    }
-                }
-                if (videoItem.thumbnail) {
-                    const thumbnailPublicId = extractPublicId(videoItem.thumbnail);
-                    if (thumbnailPublicId) {
-                        newUploadedAssets.push({ publicId: thumbnailPublicId, resourceType: 'image' });
-                    }
-                }
-            });
+        console.log('=== COURSE UPDATE - Asset Change Detection ===');
+        console.log('Existing image:', existingCourse.image);
+        console.log('New image:', req.body.image);
 
-            // Track old videos for cleanup (if completely replacing videos array)
-            if (existingCourse.videos && Array.isArray(existingCourse.videos)) {
-                existingCourse.videos.forEach(oldVideoItem => {
-                    if (oldVideoItem.url) {
-                        const oldVideoId = extractPublicId(oldVideoItem.url);
-                        if (oldVideoId) {
-                            oldAssets.push({ publicId: oldVideoId, resourceType: 'video' });
-                        }
-                    }
-                    if (oldVideoItem.thumbnail) {
-                        const oldThumbnailId = extractPublicId(oldVideoItem.thumbnail);
-                        if (oldThumbnailId) {
-                            oldAssets.push({ publicId: oldThumbnailId, resourceType: 'image' });
-                        }
-                    }
-                });
+        // Track image changes (including removal/reset to default)
+        const imageChanged = 'image' in req.body && req.body.image !== existingCourse.image;
+        if (imageChanged) {
+            console.log('IMAGE CHANGED - Will cleanup old image');
+            // Cleanup old image if it exists and is not the default
+            if (existingCourse.image && existingCourse.image !== 'default-course.jpg') {
+                const oldImageId = extractPublicId(existingCourse.image);
+                console.log('Old image public_id:', oldImageId);
+                if (oldImageId) {
+                    oldAssets.push({ publicId: oldImageId, resourceType: 'image' });
+                }
+            }
+            // Track new image for potential rollback (only if it's a real Cloudinary URL)
+            if (req.body.image && req.body.image !== 'default-course.jpg') {
+                const newImageId = extractPublicId(req.body.image);
+                if (newImageId) {
+                    newUploadedAssets.push({ publicId: newImageId, resourceType: 'image' });
+                }
             }
         }
+
+        console.log('Old assets to cleanup:', oldAssets);
+        console.log('New assets uploaded:', newUploadedAssets);
 
         // Update course in database
         const course = await Course.findByIdAndUpdate(req.params.id, req.body, {
@@ -129,9 +110,13 @@ export const updateCourse = async (req, res, next) => {
 
         // Delete old assets from Cloudinary after successful update
         if (oldAssets.length > 0) {
+            console.log('EXECUTING CLOUDINARY CLEANUP for old assets...');
             await rollbackUploads(oldAssets).catch(cleanupErr => {
                 console.error('Error cleaning up old course assets:', cleanupErr);
             });
+            console.log('Cloudinary cleanup completed');
+        } else {
+            console.log('No old assets to cleanup');
         }
 
         res.status(200).json({ success: true, data: course });
@@ -158,14 +143,53 @@ export const deleteCourse = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Course not found' });
         }
 
-        // Clean up all associated Cloudinary assets (videos and thumbnails)
-        await cleanupCourseAssets(course).catch(cleanupErr => {
-            console.error('Error cleaning up course assets from Cloudinary:', cleanupErr);
-            // Don't fail the delete operation if Cloudinary cleanup fails
-        });
+        // CASCADE DELETE: Delete all sessions belonging to this course
+        const Session = (await import('../models/Session.js')).default;
+        const sessions = await Session.find({ courseId: req.params.id });
 
-        res.status(200).json({ success: true, data: {} });
+        // Delete session assets from Cloudinary
+        for (const session of sessions) {
+            const assetsToDelete = [];
+
+            if (session.video) {
+                const { extractPublicId } = await import('../services/cloudinaryService.js');
+                const videoId = extractPublicId(session.video);
+                if (videoId) {
+                    assetsToDelete.push({ publicId: videoId, resourceType: 'video' });
+                }
+            }
+
+            if (session.thumbnail) {
+                const { extractPublicId } = await import('../services/cloudinaryService.js');
+                const thumbnailId = extractPublicId(session.thumbnail);
+                if (thumbnailId) {
+                    assetsToDelete.push({ publicId: thumbnailId, resourceType: 'image' });
+                }
+            }
+
+            if (assetsToDelete.length > 0) {
+                const { rollbackUploads } = await import('../services/cloudinaryService.js');
+                await rollbackUploads(assetsToDelete).catch(err => {
+                    console.error('Error cleaning session assets:', err);
+                });
+            }
+        }
+
+        // Delete all sessions from database
+        await Session.deleteMany({ courseId: req.params.id });
+        console.log(`Deleted ${sessions.length} sessions for course ${req.params.id}`);
+
+        // Clean up course image (if exists)
+        if (course.image && course.image !== 'default-course.jpg') {
+            const { deleteFromCloudinaryByUrl } = await import('../services/cloudinaryService.js');
+            await deleteFromCloudinaryByUrl(course.image, 'image').catch(cleanupErr => {
+                console.error('Error cleaning up course image from Cloudinary:', cleanupErr);
+            });
+        }
+
+        res.status(200).json({ success: true, data: {}, message: `Course and ${sessions.length} sessions deleted successfully` });
     } catch (err) {
+        console.error('Error deleting course:', err);
         res.status(500).json({ success: false, error: 'Server Error' });
     }
 };
