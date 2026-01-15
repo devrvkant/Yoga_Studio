@@ -25,9 +25,11 @@ const ManageCourses = () => {
         title: '',
         description: '',
         instructor: '',
+        isPaid: false,
         price: '0',
         duration: '', // e.g. "4 Weeks"
         sessions: '', // e.g. "8 Sessions"
+        level: 'All Levels',
         learnPoints: '', // Comma separated strings
         image: '',
     });
@@ -46,9 +48,11 @@ const ManageCourses = () => {
                 title: course.title,
                 description: course.description || '',
                 instructor: course.instructor || '',
+                isPaid: course.isPaid || (course.price > 0),
                 price: course.price || '0',
                 duration: course.duration || '',
                 sessions: course.sessions || '',
+                level: course.level || 'All Levels',
                 learnPoints: course.learnPoints ? course.learnPoints.join(', ') : '',
                 image: course.image || '',
             });
@@ -58,9 +62,11 @@ const ManageCourses = () => {
                 title: '',
                 description: '',
                 instructor: '',
+                isPaid: false,
                 price: '0',
                 duration: '',
                 sessions: '',
+                level: 'All Levels',
                 learnPoints: '',
                 image: '',
             });
@@ -74,8 +80,15 @@ const ManageCourses = () => {
     };
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => {
+            const updates = { [name]: type === 'checkbox' ? checked : value };
+            // Reset price if setting to free
+            if (name === 'isPaid' && !checked) {
+                updates.price = '0';
+            }
+            return { ...prev, ...updates };
+        });
     };
 
     // Background Upload Logic
@@ -301,6 +314,23 @@ const ManageCourses = () => {
                                     />
                                 </div>
                                 <div className="space-y-2">
+                                    <label className="text-sm font-medium leading-none">Level</label>
+                                    <select
+                                        name="level"
+                                        value={formData.level}
+                                        onChange={handleChange}
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    >
+                                        <option value="All Levels">All Levels</option>
+                                        <option value="Beginner">Beginner</option>
+                                        <option value="Intermediate">Intermediate</option>
+                                        <option value="Advanced">Advanced</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
                                     <label className="text-sm font-medium leading-none">Duration</label>
                                     <input
                                         type="text"
@@ -309,22 +339,6 @@ const ManageCourses = () => {
                                         onChange={handleChange}
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         placeholder="e.g. 4 Weeks"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium leading-none">Price (€)</label>
-                                    <input
-                                        type="number"
-                                        name="price"
-                                        min="0"
-                                        step="0.01"
-                                        value={formData.price}
-                                        onChange={handleChange}
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                        placeholder="0.00"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -338,6 +352,36 @@ const ManageCourses = () => {
                                         placeholder="e.g. 8 Sessions"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium leading-none">Price (€)</label>
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="checkbox"
+                                            name="isPaid"
+                                            id="isPaid"
+                                            checked={formData.isPaid}
+                                            onChange={handleChange}
+                                            className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary"
+                                        />
+                                        <label htmlFor="isPaid" className="text-xs cursor-pointer select-none text-muted-foreground">
+                                            Paid Course
+                                        </label>
+                                    </div>
+                                </div>
+                                <input
+                                    type="number"
+                                    name="price"
+                                    min="0"
+                                    step="0.01"
+                                    value={formData.price}
+                                    onChange={handleChange}
+                                    disabled={!formData.isPaid}
+                                    className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${!formData.isPaid ? 'opacity-50 cursor-not-allowed bg-muted' : ''}`}
+                                    placeholder="0.00"
+                                />
                             </div>
 
                             <div>

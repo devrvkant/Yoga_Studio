@@ -36,6 +36,8 @@ const ManageClasses = () => {
         title: '',
         instructor: '',
         description: '',
+        isPaid: false,
+        price: '0',
         duration: '',
         level: 'All Levels',
         image: '',
@@ -81,6 +83,8 @@ const ManageClasses = () => {
                 title: cls.title,
                 instructor: cls.instructor,
                 description: cls.description || '',
+                isPaid: cls.isPaid || false,
+                price: cls.price || '0',
                 duration: cls.duration,
                 level: cls.level || 'All Levels',
                 image: cls.image || '',
@@ -92,6 +96,8 @@ const ManageClasses = () => {
                 title: '',
                 instructor: '',
                 description: '',
+                isPaid: false,
+                price: '0',
                 duration: '60',
                 level: 'All Levels',
                 image: '',
@@ -107,8 +113,15 @@ const ManageClasses = () => {
     };
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => {
+            const updates = { [name]: type === 'checkbox' ? checked : value };
+            // Reset price if setting to free
+            if (name === 'isPaid' && !checked) {
+                updates.price = '0';
+            }
+            return { ...prev, ...updates };
+        });
     };
 
     // Update active upload state
@@ -429,8 +442,8 @@ const ManageClasses = () => {
                     onClick={() => handleOpenModal()}
                     disabled={activeUploads.length > 0}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeUploads.length > 0
-                            ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-60'
-                            : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                        ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-60'
+                        : 'bg-primary text-primary-foreground hover:bg-primary/90'
                         }`}
                     title={activeUploads.length > 0 ? 'Please wait for current upload to complete' : 'Add new class'}
                 >
@@ -555,6 +568,38 @@ const ManageClasses = () => {
                                         onChange={handleChange}
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         placeholder="e.g. Sarah Smith"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-medium leading-none">Price (€)</label>
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                name="isPaid"
+                                                id="isPaid"
+                                                checked={formData.isPaid}
+                                                onChange={handleChange}
+                                                className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary"
+                                            />
+                                            <label htmlFor="isPaid" className="text-xs cursor-pointer select-none text-muted-foreground">
+                                                Paid Class
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        name="price"
+                                        min="0"
+                                        step="0.01"
+                                        value={formData.price}
+                                        onChange={handleChange}
+                                        disabled={!formData.isPaid}
+                                        className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${!formData.isPaid ? 'opacity-50 cursor-not-allowed bg-muted' : ''}`}
+                                        placeholder="0.00"
                                     />
                                 </div>
                             </div>

@@ -26,9 +26,14 @@ export const authApi = createApi({
         }),
         getMe: builder.query({
             query: () => '/api/auth/me',
+            providesTags: ['Me'],
         }),
         getUsers: builder.query({
-            query: ({ page = 1, limit = 20 } = {}) => `/api/auth/users?page=${page}&limit=${limit}`,
+            query: ({ page = 1, limit = 20, status } = {}) => {
+                let url = `/api/auth/users?page=${page}&limit=${limit}`;
+                if (status) url += `&status=${status}`;
+                return url;
+            },
             providesTags: ['User'],
         }),
     }),

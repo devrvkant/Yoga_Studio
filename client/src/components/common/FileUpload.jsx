@@ -111,7 +111,7 @@ const FileUpload = ({ value, onChange, type = 'image', label, disabled }) => {
                             Click or drag to upload {type}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                            {type === 'image' ? 'PNG, JPG, WEBP up to 5MB' : 'MP4, WebM up to 100MB'}
+                            {type === 'image' ? 'Supports high quality images' : 'Supports all video formats'}
                         </p>
                     </div>
                 </div>

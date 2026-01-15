@@ -28,6 +28,29 @@ export const sessionApi = createApi({
                 body: sessionData,
             }),
             invalidatesTags: (result, error, { courseId }) => [{ type: 'Session', id: `COURSE_${courseId}` }],
+            // Optimistic Update - add temp item that gets replaced on server response
+            async onQueryStarted({ courseId, ...sessionData }, { dispatch, queryFulfilled }) {
+                const tempId = 'temp-' + Date.now();
+                const patchResult = dispatch(
+                    sessionApi.util.updateQueryData('getSessionsByCourse', courseId, (draft) => {
+                        if (draft.data) {
+                            const maxOrder = draft.data.reduce((max, s) => Math.max(max, s.order || 0), 0);
+                            draft.data.push({
+                                ...sessionData,
+                                _id: tempId,
+                                courseId,
+                                order: maxOrder + 1,
+                                createdAt: new Date().toISOString()
+                            });
+                        }
+                    })
+                );
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patchResult.undo();
+                }
+            },
         }),
 
         updateSession: builder.mutation({

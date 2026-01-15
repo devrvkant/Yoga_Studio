@@ -64,7 +64,9 @@ const Sidebar = () => {
 
             <nav className="flex-1 p-4 space-y-2">
                 {menuItems.map((item) => {
-                    const isActive = location.pathname === item.path;
+                    // Check exact match or if current path starts with the menu item path (for nested routes)
+                    const isActive = location.pathname === item.path ||
+                        (item.path !== '/admin' && location.pathname.startsWith(item.path + '/'));
                     const Icon = item.icon;
 
                     return (

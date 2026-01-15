@@ -9,6 +9,10 @@ export const courseApi = createApi({
             query: () => '/api/courses',
             providesTags: ['Course'],
         }),
+        getCourse: builder.query({
+            query: (id) => `/api/courses/${id}`,
+            providesTags: (result, error, id) => [{ type: 'Course', id }],
+        }),
         addCourse: builder.mutation({
             query: (courseData) => ({
                 url: '/api/courses',
@@ -16,6 +20,21 @@ export const courseApi = createApi({
                 body: courseData,
             }),
             invalidatesTags: ['Course'],
+            // Optimistic Update - add temp item that gets replaced on server response
+            async onQueryStarted(courseData, { dispatch, queryFulfilled }) {
+                const tempId = 'temp-' + Date.now();
+                const patchResult = dispatch(
+                    courseApi.util.updateQueryData('getCourses', undefined, (draft) => {
+                        const courses = draft.data || draft;
+                        courses.unshift({ ...courseData, _id: tempId, createdAt: new Date().toISOString() });
+                    })
+                );
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patchResult.undo();
+                }
+            },
         }),
         updateCourse: builder.mutation({
             query: ({ id, ...courseData }) => ({
@@ -28,7 +47,9 @@ export const courseApi = createApi({
             async onQueryStarted({ id, ...courseData }, { dispatch, queryFulfilled }) {
                 const patchResult = dispatch(
                     courseApi.util.updateQueryData('getCourses', undefined, (draft) => {
-                        const existingCourse = draft.find((c) => c._id === id);
+                        // Handle both { data: [...] } wrapper and direct array
+                        const courses = draft.data || draft;
+                        const existingCourse = courses.find((c) => c._id === id);
                         if (existingCourse) {
                             Object.assign(existingCourse, courseData);
                         }
@@ -51,7 +72,12 @@ export const courseApi = createApi({
             async onQueryStarted(id, { dispatch, queryFulfilled }) {
                 const patchResult = dispatch(
                     courseApi.util.updateQueryData('getCourses', undefined, (draft) => {
-                        return draft.filter((c) => c._id !== id);
+                        // Handle both { data: [...] } wrapper and direct array
+                        if (draft.data) {
+                            draft.data = draft.data.filter((c) => c._id !== id);
+                        } else {
+                            return draft.filter((c) => c._id !== id);
+                        }
                     })
                 );
                 try {
@@ -61,12 +87,21 @@ export const courseApi = createApi({
                 }
             },
         }),
+        enrollCourse: builder.mutation({
+            query: (id) => ({
+                url: `/api/courses/${id}/enroll`,
+                method: 'POST',
+            }),
+        }),
     }),
 });
 
 export const {
     useGetCoursesQuery,
+    useGetCourseQuery,
     useAddCourseMutation,
     useUpdateCourseMutation,
     useDeleteCourseMutation,
+    useEnrollCourseMutation,
 } = courseApi;
+
