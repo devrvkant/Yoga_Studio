@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 const Enrollments = () => {
     const [page, setPage] = useState(1);
     const [filterStatus, setFilterStatus] = useState('all');
-    const limit = 10; // Reduced limit to ensure it fits without scrolling
+    const limit = 15; // Users per page, or we can use 11/12 with normal height
 
     const queryParams = {
         page,
@@ -42,8 +42,8 @@ const Enrollments = () => {
     };
 
     return (
-        <div className="space-y-4 h-[calc(100vh-120px)] flex flex-col overflow-hidden">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 shrink-0">
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-display font-bold text-foreground">User Enrollments</h1>
                     <p className="text-muted-foreground text-sm mt-1">
@@ -60,8 +60,8 @@ const Enrollments = () => {
                             className="pl-9 pr-8 py-2 bg-background border border-input rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer shadow-sm hover:bg-muted/50 transition-colors"
                         >
                             <option value="all">All Users</option>
-                            <option value="premium">Premium Users</option>
-                            <option value="normal">Normal Users</option>
+                            <option value="premium">Active Students</option>
+                            <option value="normal">Registered Users</option>
                         </select>
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                             <ChevronRight className="w-4 h-4 text-muted-foreground rotate-90" />
@@ -70,16 +70,16 @@ const Enrollments = () => {
                 </div>
             </div>
 
-            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col flex-grow min-h-0">
-                <div className="flex-grow overflow-hidden">
+            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
                             <tr>
-                                <th className="px-6 py-3 bg-muted/50">User</th>
-                                <th className="px-6 py-3 text-center bg-muted/50">Status</th>
-                                <th className="px-6 py-3 text-center bg-muted/50">Booked Classes</th>
-                                <th className="px-6 py-3 text-center bg-muted/50">Enrolled Courses</th>
-                                <th className="px-6 py-3 text-center bg-muted/50">Joined Date</th>
+                                <th className="px-6 py-3 bg-muted/50 w-[30%]">User</th>
+                                <th className="px-6 py-3 text-center bg-muted/50 w-[15%]">Status</th>
+                                <th className="px-6 py-3 text-center bg-muted/50 w-[20%]">Booked Classes</th>
+                                <th className="px-6 py-3 text-center bg-muted/50 w-[20%]">Enrolled Courses</th>
+                                <th className="px-6 py-3 text-center bg-muted/50 w-[15%]">Joined Date</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/50">
@@ -104,20 +104,20 @@ const Enrollments = () => {
 
                                     return (
                                         <tr key={user._id} className="hover:bg-muted/20 transition-colors group/row">
-                                            <td className="px-6 py-3">
+                                            <td className="px-6 py-3 align-middle">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
+                                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0 text-sm">
                                                         {user.name.charAt(0).toUpperCase()}
                                                     </div>
-                                                    <div>
-                                                        <div className="font-medium text-foreground">{user.name}</div>
-                                                        <div className="text-muted-foreground text-xs flex items-center gap-1">
-                                                            <Mail size={10} /> {user.email}
+                                                    <div className="min-w-0">
+                                                        <div className="font-medium text-foreground truncate">{user.name}</div>
+                                                        <div className="text-muted-foreground text-xs flex items-center gap-1 truncate opacity-80">
+                                                            <Mail size={12} /> {user.email}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-3 text-center">
+                                            <td className="px-6 py-3 text-center align-middle">
                                                 {isPremium ? (
                                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200/50">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
@@ -125,71 +125,73 @@ const Enrollments = () => {
                                                     </span>
                                                 ) : hasEnrollments ? (
                                                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
-                                                        Student
+                                                        Active
                                                     </span>
                                                 ) : (
                                                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                                                        Normal
+                                                        Registered
                                                     </span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-3 text-center">
+                                            <td className="px-6 py-3 text-center align-middle">
                                                 {user.enrolledClasses?.length > 1 ? (
                                                     <div className="flex items-center justify-center gap-1.5 group relative cursor-help">
                                                         <span className="text-sm font-medium text-foreground">{user.enrolledClasses.length} Classes</span>
-                                                        <Info size={14} className="text-muted-foreground/70" />
-                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2 bg-popover text-popover-foreground text-xs rounded-lg shadow-xl border border-border hidden group-hover:block z-50">
+                                                        <Info size={14} className="text-muted-foreground/50" />
+                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2 bg-background dark:bg-slate-900 text-foreground text-xs rounded-lg shadow-xl ring-1 ring-border z-50 hidden group-hover:block animate-in fade-in zoom-in-95 duration-200">
                                                             <div className="flex flex-col gap-1.5 p-1 max-h-48 overflow-y-auto">
                                                                 {user.enrolledClasses.map(cls => (
                                                                     <div key={cls._id} className="flex items-center gap-2 border-b last:border-0 border-border/50 pb-1 last:pb-0 text-left">
                                                                         <Calendar size={12} className="text-primary shrink-0" />
-                                                                        <span className="truncate">{cls.title}</span>
+                                                                        <span className="truncate font-medium">{cls.title}</span>
                                                                     </div>
                                                                 ))}
                                                             </div>
-                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-popover"></div>
+                                                            {/* Arrow */}
+                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-background dark:border-t-slate-900 drop-shadow-sm"></div>
                                                         </div>
                                                     </div>
                                                 ) : user.enrolledClasses?.length === 1 ? (
-                                                    <div className="flex flex-col gap-1 items-center">
-                                                        <div className="flex items-center gap-1 text-xs bg-secondary/50 px-2 py-1 rounded-md text-foreground/80 max-w-[150px]">
+                                                    <div className="flex justify-center">
+                                                        <div className="flex items-center gap-1 text-xs bg-secondary/50 px-2.5 py-1 rounded-md text-foreground/80 max-w-[150px]">
                                                             <Calendar size={12} className="text-primary shrink-0" />
                                                             <span className="truncate">{user.enrolledClasses[0].title}</span>
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-muted-foreground/40 text-xs font-medium">N/A</span>
+                                                    <span className="text-muted-foreground/30 text-xs font-medium">-</span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-3 text-center">
+                                            <td className="px-6 py-3 text-center align-middle">
                                                 {user.enrolledCourses?.length > 1 ? (
                                                     <div className="flex items-center justify-center gap-1.5 group relative cursor-help">
                                                         <span className="text-sm font-medium text-foreground">{user.enrolledCourses.length} Courses</span>
-                                                        <Info size={14} className="text-muted-foreground/70" />
-                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2 bg-popover text-popover-foreground text-xs rounded-lg shadow-xl border border-border hidden group-hover:block z-50">
+                                                        <Info size={14} className="text-muted-foreground/50" />
+                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2 bg-background dark:bg-slate-900 text-foreground text-xs rounded-lg shadow-xl ring-1 ring-border z-50 hidden group-hover:block animate-in fade-in zoom-in-95 duration-200">
                                                             <div className="flex flex-col gap-1.5 p-1 max-h-48 overflow-y-auto">
                                                                 {user.enrolledCourses.map(course => (
                                                                     <div key={course._id} className="flex items-center gap-2 border-b last:border-0 border-border/50 pb-1 last:pb-0 text-left">
                                                                         <Book size={12} className="text-primary shrink-0" />
-                                                                        <span className="truncate">{course.title}</span>
+                                                                        <span className="truncate font-medium">{course.title}</span>
                                                                     </div>
                                                                 ))}
                                                             </div>
-                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-popover"></div>
+                                                            {/* Arrow */}
+                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-background dark:border-t-slate-900 drop-shadow-sm"></div>
                                                         </div>
                                                     </div>
                                                 ) : user.enrolledCourses?.length === 1 ? (
-                                                    <div className="flex flex-col gap-1 items-center">
-                                                        <div className="flex items-center gap-1 text-xs bg-secondary/50 px-2 py-1 rounded-md text-foreground/80 max-w-[150px]">
+                                                    <div className="flex justify-center">
+                                                        <div className="flex items-center gap-1 text-xs bg-secondary/50 px-2.5 py-1 rounded-md text-foreground/80 max-w-[150px]">
                                                             <Book size={12} className="text-primary shrink-0" />
                                                             <span className="truncate">{user.enrolledCourses[0].title}</span>
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-muted-foreground/40 text-xs font-medium">N/A</span>
+                                                    <span className="text-muted-foreground/30 text-xs font-medium">-</span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-3 text-center text-muted-foreground text-sm">
+                                            <td className="px-6 py-3 text-center text-muted-foreground text-sm align-middle">
                                                 {format(new Date(user.createdAt), 'MMM d, yyyy')}
                                             </td>
                                         </tr>
@@ -202,7 +204,7 @@ const Enrollments = () => {
 
                 {/* Pagination UI - Only show if more than one page */}
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-6 py-3 border-t border-border bg-muted/20 shrink-0">
+                    <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/20">
                         <div className="text-sm text-muted-foreground">
                             Page {page} of {totalPages} • Showing {users.length} of {totalUsers} users
                         </div>
