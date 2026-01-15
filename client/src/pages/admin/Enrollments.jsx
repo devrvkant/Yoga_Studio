@@ -60,8 +60,9 @@ const Enrollments = () => {
                             className="pl-9 pr-8 py-2 bg-background border border-input rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer shadow-sm hover:bg-muted/50 transition-colors"
                         >
                             <option value="all">All Users</option>
-                            <option value="premium">Active Students</option>
-                            <option value="normal">Registered Users</option>
+                            <option value="premium">Premium Users</option>
+                            <option value="active">Active Students</option>
+                            <option value="registered">Registered Users</option>
                         </select>
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                             <ChevronRight className="w-4 h-4 text-muted-foreground rotate-90" />

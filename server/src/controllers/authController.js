@@ -127,11 +127,19 @@ export const getAllUsers = async (req, res) => {
 
         // Apply status filter if present
         if (status === 'premium') {
+            // Users with at least one PAID enrollment
             query.$or = [
-                { enrolledClasses: { $exists: true, $not: { $size: 0 } } },
-                { enrolledCourses: { $exists: true, $not: { $size: 0 } } }
+                { 'enrolledClasses': { $exists: true, $not: { $size: 0 } } },
+                { 'enrolledCourses': { $exists: true, $not: { $size: 0 } } }
             ];
-        } else if (status === 'normal') {
+        } else if (status === 'active') {
+            // Users with at least one FREE enrollment (will be filtered in application logic)
+            query.$or = [
+                { 'enrolledClasses': { $exists: true, $not: { $size: 0 } } },
+                { 'enrolledCourses': { $exists: true, $not: { $size: 0 } } }
+            ];
+        } else if (status === 'registered') {
+            // Users with NO enrollments
             query.enrolledClasses = { $size: 0 };
             query.enrolledCourses = { $size: 0 };
         }
@@ -140,12 +148,29 @@ export const getAllUsers = async (req, res) => {
         const totalUsers = await User.countDocuments(query);
 
         // Fetch paginated users
-        const users = await User.find(query)
+        let users = await User.find(query)
             .populate('enrolledClasses', 'title isPaid')
             .populate('enrolledCourses', 'title isPaid')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 }); // Most recent first
+
+        // Post-query filtering for premium vs active
+        if (status === 'premium') {
+            // Keep only users with at least one PAID enrollment
+            users = users.filter(user =>
+                user.enrolledClasses?.some(c => c.isPaid) ||
+                user.enrolledCourses?.some(c => c.isPaid)
+            );
+        } else if (status === 'active') {
+            // Keep only users with FREE enrollments (no paid)
+            users = users.filter(user => {
+                const hasPaid = user.enrolledClasses?.some(c => c.isPaid) ||
+                    user.enrolledCourses?.some(c => c.isPaid);
+                const hasEnrollments = (user.enrolledClasses?.length > 0 || user.enrolledCourses?.length > 0);
+                return hasEnrollments && !hasPaid;
+            });
+        }
 
         res.status(200).json({
             success: true,
