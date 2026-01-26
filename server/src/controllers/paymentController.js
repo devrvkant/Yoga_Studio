@@ -169,6 +169,7 @@ export const handleDigistoreIPN = async (req, res) => {
     console.log('Order ID:', req.body.order_id);
     console.log('Product ID:', req.body.product_id);
     console.log('Email:', req.body.email);
+    console.log('Custom:', req.body.custom);
 
     try {
         // 1. Verify signature
@@ -183,11 +184,32 @@ export const handleDigistoreIPN = async (req, res) => {
         const event = ipnData.event;
         const email = ipnData.email?.toLowerCase();
         const productId = ipnData.product_id;
+        const customData = ipnData.custom;
 
-        // 2. Find user by email
-        const user = await User.findOne({ email });
+        // 2. Find user - prioritize userId from custom field, fallback to email
+        let user = null;
+
+        // Try to extract userId from custom field first (most reliable)
+        if (customData) {
+            try {
+                const decoded = JSON.parse(Buffer.from(customData, 'base64').toString('utf8'));
+                if (decoded.userId) {
+                    user = await User.findById(decoded.userId);
+                    console.log('User found via custom field userId:', user?.email);
+                }
+            } catch (parseError) {
+                console.warn('Could not parse custom field, falling back to email:', parseError.message);
+            }
+        }
+
+        // Fallback to email if custom field didn't work
+        if (!user && email) {
+            user = await User.findOne({ email });
+            console.log('User found via email:', user?.email);
+        }
+
         if (!user) {
-            console.error(`User not found for email: ${email}`);
+            console.error(`User not found. Email: ${email}, Custom: ${customData}`);
             // Return OK - we don't want Digistore to keep retrying
             return res.status(200).send('OK');
         }

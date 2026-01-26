@@ -17,6 +17,16 @@ export const getClasses = async (req, res, next) => {
             query.level = req.query.level;
         }
 
+        // Add search functionality
+        if (req.query.search && req.query.search.trim()) {
+            const searchRegex = new RegExp(req.query.search.trim(), 'i');
+            query.$or = [
+                { title: searchRegex },
+                { description: searchRegex },
+                { instructor: searchRegex }
+            ];
+        }
+
         const total = await Class.countDocuments(query);
         const classes = await Class.find(query).skip(startIndex).limit(limit);
 

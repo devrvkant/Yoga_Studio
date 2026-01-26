@@ -41,7 +41,12 @@ const env = {
     // Payment (Digistore24)
     DIGISTORE_VENDOR_ID: process.env.DIGISTORE_VENDOR_ID,
     DIGISTORE_IPN_PASSPHRASE: process.env.DIGISTORE_IPN_PASSPHRASE,
-    FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+
+    // Frontend URL - environment aware
+    FRONTEND_URL: process.env.FRONTEND_URL ||
+        (process.env.NODE_ENV === 'production'
+            ? 'https://yourdomain.com' // TODO: Replace with your actual production domain
+            : 'http://localhost:5173'),
 };
 
 // Validate required Cloudinary credentials
