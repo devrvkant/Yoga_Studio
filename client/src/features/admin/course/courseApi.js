@@ -6,8 +6,20 @@ export const courseApi = createApi({
     tagTypes: ['Course'],
     endpoints: (builder) => ({
         getCourses: builder.query({
-            query: () => '/api/courses',
-            providesTags: ['Course'],
+            query: ({ page = 1, limit = 12, level = '' } = {}) => {
+                let url = `/api/courses?page=${page}&limit=${limit}`;
+                if (level && level !== 'All Courses') {
+                    url += `&level=${encodeURIComponent(level)}`;
+                }
+                return url;
+            },
+            providesTags: (result) =>
+                result
+                    ? [
+                        ...result.data.map(({ _id }) => ({ type: 'Course', id: _id })),
+                        { type: 'Course', id: 'LIST' },
+                    ]
+                    : [{ type: 'Course', id: 'LIST' }],
         }),
         getCourse: builder.query({
             query: (id) => `/api/courses/${id}`,
@@ -19,22 +31,7 @@ export const courseApi = createApi({
                 method: 'POST',
                 body: courseData,
             }),
-            invalidatesTags: ['Course'],
-            // Optimistic Update - add temp item that gets replaced on server response
-            async onQueryStarted(courseData, { dispatch, queryFulfilled }) {
-                const tempId = 'temp-' + Date.now();
-                const patchResult = dispatch(
-                    courseApi.util.updateQueryData('getCourses', undefined, (draft) => {
-                        const courses = draft.data || draft;
-                        courses.unshift({ ...courseData, _id: tempId, createdAt: new Date().toISOString() });
-                    })
-                );
-                try {
-                    await queryFulfilled;
-                } catch {
-                    patchResult.undo();
-                }
-            },
+            invalidatesTags: [{ type: 'Course', id: 'LIST' }],
         }),
         updateCourse: builder.mutation({
             query: ({ id, ...courseData }) => ({
@@ -42,56 +39,27 @@ export const courseApi = createApi({
                 method: 'PUT',
                 body: courseData,
             }),
-            invalidatesTags: ['Course'],
-            // Optimistic Update
-            async onQueryStarted({ id, ...courseData }, { dispatch, queryFulfilled }) {
-                const patchResult = dispatch(
-                    courseApi.util.updateQueryData('getCourses', undefined, (draft) => {
-                        // Handle both { data: [...] } wrapper and direct array
-                        const courses = draft.data || draft;
-                        const existingCourse = courses.find((c) => c._id === id);
-                        if (existingCourse) {
-                            Object.assign(existingCourse, courseData);
-                        }
-                    })
-                );
-                try {
-                    await queryFulfilled;
-                } catch {
-                    patchResult.undo();
-                }
-            },
+            invalidatesTags: (result, error, { id }) => [
+                { type: 'Course', id },
+                { type: 'Course', id: 'LIST' }
+            ],
         }),
         deleteCourse: builder.mutation({
             query: (id) => ({
                 url: `/api/courses/${id}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: ['Course'],
-            // Optimistic Update
-            async onQueryStarted(id, { dispatch, queryFulfilled }) {
-                const patchResult = dispatch(
-                    courseApi.util.updateQueryData('getCourses', undefined, (draft) => {
-                        // Handle both { data: [...] } wrapper and direct array
-                        if (draft.data) {
-                            draft.data = draft.data.filter((c) => c._id !== id);
-                        } else {
-                            return draft.filter((c) => c._id !== id);
-                        }
-                    })
-                );
-                try {
-                    await queryFulfilled;
-                } catch {
-                    patchResult.undo();
-                }
-            },
+            invalidatesTags: [{ type: 'Course', id: 'LIST' }],
         }),
         enrollCourse: builder.mutation({
             query: (id) => ({
                 url: `/api/courses/${id}/enroll`,
                 method: 'POST',
             }),
+            invalidatesTags: (result, error, id) => [
+                { type: 'Course', id },
+                { type: 'Course', id: 'LIST' }
+            ],
         }),
     }),
 });

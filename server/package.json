@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "seed:courses": "node scripts/seedCourses.js"
+    "seed:courses": "node scripts/seedCourses.js",
+    "seed:dummy": "node seed_data.js"
   },
   "keywords": [],
   "author": "",

@@ -6,8 +6,20 @@ export const classApi = createApi({
     tagTypes: ['Class'],
     endpoints: (builder) => ({
         getClasses: builder.query({
-            query: () => '/api/classes',
-            providesTags: ['Class'],
+            query: ({ page = 1, limit = 12, level = '' } = {}) => {
+                let url = `/api/classes?page=${page}&limit=${limit}`;
+                if (level && level !== 'All Classes') {
+                    url += `&level=${encodeURIComponent(level)}`;
+                }
+                return url;
+            },
+            providesTags: (result) =>
+                result
+                    ? [
+                        ...result.data.map(({ _id }) => ({ type: 'Class', id: _id })),
+                        { type: 'Class', id: 'LIST' },
+                    ]
+                    : [{ type: 'Class', id: 'LIST' }],
         }),
         getClass: builder.query({
             query: (id) => `/api/classes/${id}`,
@@ -19,22 +31,7 @@ export const classApi = createApi({
                 method: 'POST',
                 body: classData,
             }),
-            invalidatesTags: ['Class'],
-            // Optimistic Update - add temp item that gets replaced on server response
-            async onQueryStarted(classData, { dispatch, queryFulfilled }) {
-                const tempId = 'temp-' + Date.now();
-                const patchResult = dispatch(
-                    classApi.util.updateQueryData('getClasses', undefined, (draft) => {
-                        const classes = draft.data || draft;
-                        classes.unshift({ ...classData, _id: tempId, createdAt: new Date().toISOString() });
-                    })
-                );
-                try {
-                    await queryFulfilled;
-                } catch {
-                    patchResult.undo();
-                }
-            },
+            invalidatesTags: [{ type: 'Class', id: 'LIST' }],
         }),
         updateClass: builder.mutation({
             query: ({ id, ...classData }) => ({
@@ -42,56 +39,27 @@ export const classApi = createApi({
                 method: 'PUT',
                 body: classData,
             }),
-            invalidatesTags: ['Class'],
-            // Optimistic Update
-            async onQueryStarted({ id, ...classData }, { dispatch, queryFulfilled }) {
-                const patchResult = dispatch(
-                    classApi.util.updateQueryData('getClasses', undefined, (draft) => {
-                        // Handle both { data: [...] } wrapper and direct array
-                        const classes = draft.data || draft;
-                        const existingClass = classes.find((c) => c._id === id);
-                        if (existingClass) {
-                            Object.assign(existingClass, classData);
-                        }
-                    })
-                );
-                try {
-                    await queryFulfilled;
-                } catch {
-                    patchResult.undo();
-                }
-            },
+            invalidatesTags: (result, error, { id }) => [
+                { type: 'Class', id },
+                { type: 'Class', id: 'LIST' }
+            ],
         }),
         deleteClass: builder.mutation({
             query: (id) => ({
                 url: `/api/classes/${id}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: ['Class'],
-            // Optimistic Update
-            async onQueryStarted(id, { dispatch, queryFulfilled }) {
-                const patchResult = dispatch(
-                    classApi.util.updateQueryData('getClasses', undefined, (draft) => {
-                        // Handle both { data: [...] } wrapper and direct array
-                        if (draft.data) {
-                            draft.data = draft.data.filter((c) => c._id !== id);
-                        } else {
-                            return draft.filter((c) => c._id !== id);
-                        }
-                    })
-                );
-                try {
-                    await queryFulfilled;
-                } catch {
-                    patchResult.undo();
-                }
-            },
+            invalidatesTags: [{ type: 'Class', id: 'LIST' }],
         }),
         enrollClass: builder.mutation({
             query: (id) => ({
                 url: `/api/classes/${id}/enroll`,
                 method: 'POST',
             }),
+            invalidatesTags: (result, error, id) => [
+                { type: 'Class', id },
+                { type: 'Class', id: 'LIST' } // Invalidate list to update "isEnrolled" status (if included in list)
+            ],
         }),
     }),
 });

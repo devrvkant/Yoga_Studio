@@ -12,7 +12,8 @@ import FileUpload from '../../components/common/FileUpload';
 import { uploadToCloudinary } from '../../utils/uploadMedia';
 
 const ManageCourses = () => {
-    const { data: coursesData, isLoading, error } = useGetCoursesQuery();
+    // Fetch all courses for client-side filtering (limit: 1000)
+    const { data: coursesData, isLoading, error } = useGetCoursesQuery({ limit: 1000 });
     const [addCourse] = useAddCourseMutation();
     const [updateCourse] = useUpdateCourseMutation();
     const [deleteCourse] = useDeleteCourseMutation();

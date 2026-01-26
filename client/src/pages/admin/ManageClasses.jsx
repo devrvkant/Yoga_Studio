@@ -25,7 +25,8 @@ import {
 import { uploadToCloudinary } from '../../utils/uploadMedia';
 
 const ManageClasses = () => {
-    const { data: classesData, isLoading, error } = useGetClassesQuery();
+    // Fetch all classes for client-side filtering (limit: 1000)
+    const { data: classesData, isLoading, error } = useGetClassesQuery({ limit: 1000 });
     const [addClass] = useAddClassMutation();
     const [updateClass] = useUpdateClassMutation();
     const [deleteClass] = useDeleteClassMutation();

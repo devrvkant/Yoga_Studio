@@ -6,8 +6,44 @@ import { cleanupCourseAssets, rollbackUploads, extractPublicId } from '../servic
 // @access  Public
 export const getCourses = async (req, res, next) => {
     try {
-        const courses = await Course.find();
-        res.status(200).json({ success: true, count: courses.length, data: courses });
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 12;
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+
+        // Build query
+        const query = {};
+        if (req.query.level && req.query.level !== 'All Courses') {
+            query.level = req.query.level;
+        }
+
+        const total = await Course.countDocuments(query);
+        const courses = await Course.find(query).skip(startIndex).limit(limit);
+
+        // Pagination result
+        const pagination = {};
+
+        if (endIndex < total) {
+            pagination.next = {
+                page: page + 1,
+                limit
+            };
+        }
+
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1,
+                limit
+            };
+        }
+
+        res.status(200).json({
+            success: true,
+            count: courses.length,
+            total,
+            pagination,
+            data: courses
+        });
     } catch (err) {
         res.status(500).json({ success: false, error: 'Server Error' });
     }

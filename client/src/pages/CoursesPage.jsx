@@ -1,45 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, User, Users, BookOpen, Heart, Calendar, Phone, Bot, Signal } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { cn } from '../lib/utils'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useGetCoursesQuery, useEnrollCourseMutation } from '../features/admin/course/courseApi';
 import { useGetMeQuery } from '../features/auth/authApi';
 import EmptyState from '../components/common/EmptyState';
-import beginnerCourseImg from '../assets/images/beginer_course.jpg'
-import intermediateCourseImg from '../assets/images/intermediate_course.jpg'
-import meditationCourseImg from '../assets/images/meditation_course.jpg'
+import Pagination from '../components/common/Pagination';
 
 export function CoursesPage() {
-    const [activeFilter, setActiveFilter] = useState("All Courses")
-    const { data: coursesData, isLoading } = useGetCoursesQuery();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [activeFilter, setActiveFilter] = useState("All Courses");
+    const [currentPage, setCurrentPage] = useState(1);
+
+    // Reset page when filter changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeFilter]);
+
+    const { data: coursesData, isLoading, isFetching } = useGetCoursesQuery({
+        page: currentPage,
+        limit: 12,
+        level: activeFilter
+    });
+
     const { data: userData, refetch: refetchUser } = useGetMeQuery();
     const [enrollCourse] = useEnrollCourseMutation();
     const navigate = useNavigate();
 
     const courses = coursesData?.data || [];
+    const totalPages = coursesData?.pagination?.pages || Math.ceil((coursesData?.total || 0) / 12);
     const enrolledCourseIds = userData?.data?.enrolledCourses?.map(c => c._id) || [];
     const filters = ["All Courses", "Beginner", "Intermediate", "Advanced"];
 
-    const handleEnroll = async (course) => {
+    const handleAction = async (course) => {
+        // 1. Guest: Redirect to Login
         if (!userData) {
             toast.error("Please login to enroll");
-            navigate('/login');
+            navigate('/login', { state: { from: '/courses' } }); // Better redirection handling
             return;
         }
 
-        if (enrolledCourseIds.includes(course._id)) {
-            toast.info("You are already enrolled in this course");
+        const isEnrolled = enrolledCourseIds.includes(course._id);
+
+        // 2. Enrolled User: Go to Course
+        if (isEnrolled) {
+            navigate(`/courses/${course._id}`);
             return;
         }
 
+        // 3. New User: Paid Course -> Checkout
         if (course.isPaid) {
             // Redirect to checkout page for paid courses
             navigate(`/checkout?type=course&id=${course._id}`);
             return;
         }
 
+        // 4. New User: Free Course -> Enroll
         const toastId = toast.loading("Enrolling...");
         try {
             await enrollCourse(course._id).unwrap();
@@ -50,9 +68,10 @@ export function CoursesPage() {
         }
     };
 
-    const filteredCourses = activeFilter === "All Courses"
-        ? courses
-        : courses.filter(c => c.level === activeFilter)
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const features = [
         {
@@ -93,7 +112,6 @@ export function CoursesPage() {
                 </div>
 
                 <div className="relative z-10 max-w-4xl mx-auto text-white">
-                    <span className="text-white/90 text-sm md:text-base font-medium uppercase tracking-widest mb-4 block drop-shadow-md">Home / Courses</span>
                     <h1 className="text-5xl md:text-7xl font-display font-bold mb-6 drop-shadow-lg">Yoga Courses</h1>
                     <p className="text-white/95 text-lg md:text-xl font-medium max-w-2xl mx-auto drop-shadow-md">
                         Structured learning programs designed to deepen your practice and understanding of yoga
@@ -122,11 +140,11 @@ export function CoursesPage() {
             {/* Courses Grid */}
             <section className="py-24 bg-background">
                 <div className="container mx-auto px-6 max-w-7xl">
-                    {isLoading ? (
+                    {isLoading || isFetching ? (
                         <div className="flex justify-center py-20">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                         </div>
-                    ) : filteredCourses.length === 0 ? (
+                    ) : courses.length === 0 ? (
                         <EmptyState
                             title="No courses found"
                             description={`We couldn't find any ${activeFilter.toLowerCase()} at the moment.`}
@@ -134,79 +152,88 @@ export function CoursesPage() {
                             onAction={() => setActiveFilter("All Courses")}
                         />
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {filteredCourses.map((course) => {
-                                const isEnrolled = enrolledCourseIds.includes(course._id);
-                                return (
-                                    <div key={course._id} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-border-soft flex flex-col h-full relative group">
-                                        {/* Premium/Free Badge */}
-                                        <div className="absolute top-4 right-4 z-10">
-                                            <span className={`px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider ${course.isPaid ? 'bg-primary' : 'bg-emerald-500'}`}>
-                                                {course.isPaid ? 'Premium' : 'Free'}
-                                            </span>
-                                        </div>
-
-                                        <div className="relative h-56 overflow-hidden">
-                                            <img
-                                                src={course.image}
-                                                alt={course.title}
-                                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-                                            />
-                                        </div>
-                                        <div className="p-8 flex flex-col flex-grow">
-                                            <h3 className="text-2xl font-display font-bold text-foreground mb-4">{course.title}</h3>
-
-                                            <div className="flex items-center gap-6 text-sm font-medium text-muted mb-6">
-                                                <div className="flex items-center gap-1.5">
-                                                    <Calendar size={16} />
-                                                    {course.duration}
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <Users size={16} />
-                                                    {course.sessions}
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <Signal size={16} />
-                                                    {course.level || 'All Levels'}
-                                                </div>
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {courses.map((course) => {
+                                    const isEnrolled = enrolledCourseIds.includes(course._id);
+                                    return (
+                                        <div key={course._id} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-border-soft flex flex-col h-full relative group">
+                                            {/* Premium/Free Badge */}
+                                            <div className="absolute top-4 right-4 z-10">
+                                                <span className={`px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider ${course.isPaid ? 'bg-primary' : 'bg-emerald-500'}`}>
+                                                    {course.isPaid ? 'Premium' : 'Free'}
+                                                </span>
                                             </div>
 
-                                            <p className="text-muted leading-relaxed mb-6 font-light text-sm line-clamp-3">
-                                                {course.description}
-                                            </p>
-
-                                            <div className="mb-8 flex-grow">
-                                                <h4 className="font-bold text-foreground mb-4 text-sm uppercase tracking-wide">What You'll Learn:</h4>
-                                                <ul className="space-y-3">
-                                                    {course.learnPoints && course.learnPoints.slice(0, 4).map((item, idx) => (
-                                                        <li key={idx} className="flex items-start gap-2.5 text-sm font-light text-muted">
-                                                            <Check size={16} className="text-primary mt-0.5 min-w-[16px]" />
-                                                            {item}
-                                                        </li>
-                                                    ))}
-                                                </ul>
+                                            <div className="relative h-56 overflow-hidden">
+                                                <img
+                                                    src={course.image}
+                                                    alt={course.title}
+                                                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                                                />
                                             </div>
+                                            <div className="p-8 flex flex-col flex-grow">
+                                                <h3 className="text-2xl font-display font-bold text-foreground mb-4">{course.title}</h3>
 
-                                            <div className="mt-auto pt-6 border-t border-border-soft/60">
-                                                <div className="flex items-end justify-between mb-4">
-                                                    <span className="text-3xl font-bold text-primary">
-                                                        {course.isPaid ? `€${course.price}` : 'Free'}
-                                                    </span>
-                                                    {course.isPaid && <span className="text-sm text-muted mb-1">per course</span>}
+                                                <div className="flex items-center gap-6 text-sm font-medium text-muted mb-6">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Calendar size={16} />
+                                                        {course.duration}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Users size={16} />
+                                                        {course.sessions}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Signal size={16} />
+                                                        {course.level || 'All Levels'}
+                                                    </div>
                                                 </div>
-                                                <Button
-                                                    className={`w-full rounded-lg font-semibold py-6 ${isEnrolled ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : ''}`}
-                                                    variant={isEnrolled ? "outline" : "default"}
-                                                    onClick={() => isEnrolled ? navigate(`/courses/${course._id}`) : handleEnroll(course)}
-                                                >
-                                                    {isEnrolled ? 'Go to Course' : course.isPaid ? 'Enroll Now' : 'Enroll for Free'}
-                                                </Button>
+
+                                                <p className="text-muted leading-relaxed mb-6 font-light text-sm line-clamp-3">
+                                                    {course.description}
+                                                </p>
+
+                                                <div className="mb-8 flex-grow">
+                                                    <h4 className="font-bold text-foreground mb-4 text-sm uppercase tracking-wide">What You'll Learn:</h4>
+                                                    <ul className="space-y-3">
+                                                        {course.learnPoints && course.learnPoints.slice(0, 4).map((item, idx) => (
+                                                            <li key={idx} className="flex items-start gap-2.5 text-sm font-light text-muted">
+                                                                <Check size={16} className="text-primary mt-0.5 min-w-[16px]" />
+                                                                {item}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+
+                                                <div className="mt-auto pt-6 border-t border-border-soft/60">
+                                                    <div className="flex items-end justify-between mb-4">
+                                                        <span className="text-3xl font-bold text-primary">
+                                                            {course.isPaid ? `€${course.price}` : 'Free'}
+                                                        </span>
+                                                        {course.isPaid && <span className="text-sm text-muted mb-1">per course</span>}
+                                                    </div>
+                                                    <Button
+                                                        className={`w-full rounded-lg font-semibold py-6 ${isEnrolled ? 'bg-primary/90 hover:bg-primary' : ''}`}
+                                                        variant={isEnrolled ? "default" : "default"}
+                                                        onClick={() => handleAction(course)}
+                                                    >
+                                                        {isEnrolled ? 'Go to Course' : course.isPaid ? 'Enroll Now' : 'Enroll for Free'}
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Pagination */}
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={coursesData?.pagination?.pages || Math.ceil((coursesData?.total || 0) / 12)}
+                                onPageChange={handlePageChange}
+                            />
+                        </>
                     )}
                 </div>
             </section>
@@ -242,10 +269,12 @@ export function CoursesPage() {
                     <p className="text-white/90 text-lg md:text-xl font-light mb-10 max-w-2xl mx-auto">
                         Join our structured courses and transform your yoga journey. Contact us for more information or guidance on which course is right for you.
                     </p>
-                    <Button variant="outline" size="lg" className="rounded-full px-8 bg-white text-primary border-white hover:bg-white/90 hover:text-primary">
-                        <Phone size={18} className="mr-2" />
-                        Contact Us for More Info
-                    </Button>
+                    <a href="tel:+15550000000">
+                        <Button variant="outline" size="lg" className="rounded-full px-8 bg-white text-primary border-white hover:bg-white/90 hover:text-primary">
+                            <Phone size={18} className="mr-2" />
+                            Contact Us for More Info
+                        </Button>
+                    </a>
                 </div>
             </section>
 

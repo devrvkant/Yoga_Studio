@@ -6,8 +6,44 @@ import { cleanupClassAssets, rollbackUploads, extractPublicId } from '../service
 // @access  Public
 export const getClasses = async (req, res, next) => {
     try {
-        const classes = await Class.find();
-        res.status(200).json({ success: true, count: classes.length, data: classes });
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 12;
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+
+        // Build query
+        const query = {};
+        if (req.query.level && req.query.level !== 'All Classes') {
+            query.level = req.query.level;
+        }
+
+        const total = await Class.countDocuments(query);
+        const classes = await Class.find(query).skip(startIndex).limit(limit);
+
+        // Pagination result
+        const pagination = {};
+
+        if (endIndex < total) {
+            pagination.next = {
+                page: page + 1,
+                limit
+            };
+        }
+
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1,
+                limit
+            };
+        }
+
+        res.status(200).json({
+            success: true,
+            count: classes.length,
+            total,
+            pagination,
+            data: classes
+        });
     } catch (err) {
         res.status(500).json({ success: false, error: 'Server Error' });
     }
