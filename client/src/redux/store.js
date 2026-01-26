@@ -7,6 +7,7 @@ import courseReducer from '../features/admin/course/courseSlice.js';
 import { courseApi } from '../features/admin/course/courseApi.js';
 import sessionReducer from '../features/admin/session/sessionSlice.js';
 import { sessionApi } from '../features/admin/session/sessionApi.js';
+import { paymentApi } from '../features/payment/paymentApi.js';
 
 export const store = configureStore({
     reducer: {
@@ -18,13 +19,15 @@ export const store = configureStore({
         [courseApi.reducerPath]: courseApi.reducer,
         session: sessionReducer,
         [sessionApi.reducerPath]: sessionApi.reducer,
+        [paymentApi.reducerPath]: paymentApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat(
             authApi.middleware,
             classApi.middleware,
             courseApi.middleware,
-            sessionApi.middleware
+            sessionApi.middleware,
+            paymentApi.middleware
         ),
 });
 
