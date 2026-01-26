@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { useRegisterMutation } from '../features/auth/authApi';
 import { setCredentials } from '../features/auth/authSlice';
 import { toast } from 'sonner';
+import { ArrowLeft } from 'lucide-react';
 
 const RegisterPage = () => {
     const [formData, setFormData] = useState({
@@ -73,7 +74,16 @@ const RegisterPage = () => {
             </div>
 
             {/* Right Side - Register Form */}
-            <div className='w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 lg:p-24 bg-card'>
+            <div className='w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 lg:p-24 bg-card relative'>
+                {/* Back Button */}
+                <Link
+                    to="/"
+                    className="absolute top-8 left-8 p-2 text-muted-foreground hover:text-foreground transition-colors hover:bg-secondary/50 rounded-full group"
+                    aria-label="Back to Home"
+                >
+                    <ArrowLeft className="h-6 w-6 group-hover:-translate-x-1 transition-transform" />
+                </Link>
+
                 <div className='w-full max-w-md space-y-8'>
                     <div className='text-center lg:text-left'>
                         <h2 className='text-4xl font-display font-bold tracking-tight text-foreground'>

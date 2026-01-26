@@ -1,5 +1,6 @@
 import { Button } from '../ui/Button'
 import { Calendar } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export function CTA() {
     return (
@@ -9,10 +10,12 @@ export function CTA() {
                 <p className="text-white/90 text-lg mb-10 max-w-2xl mx-auto font-light leading-relaxed">
                     Join our welcoming community and start your yoga journey today
                 </p>
-                <Button variant="white" size="lg" className="bg-white text-primary hover:bg-white/90 rounded-full px-8 py-6 text-base font-semibold shadow-lg">
-                    <Calendar className="mr-2 h-5 w-5" />
-                    Book Your First Class
-                </Button>
+                <Link to="/classes">
+                    <Button variant="white" size="lg" className="bg-white text-primary hover:bg-white/90 rounded-full px-8 py-6 text-base font-semibold shadow-lg transition-transform hover:-translate-y-1">
+                        <Calendar className="mr-2 h-5 w-5" />
+                        Book Your First Class
+                    </Button>
+                </Link>
             </div>
         </section>
     )

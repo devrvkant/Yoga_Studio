@@ -4,7 +4,7 @@ import logoImg from '../../assets/logos/logo.png'
 
 export function Footer() {
     return (
-        <footer className="bg-[#1f2937] text-gray-300 py-16 rounded-tl-3xl rounded-tr-3xl">
+        <footer className="bg-[#1f2937] text-gray-300 py-16">
             <div className="container mx-auto px-6 max-w-7xl">
                 <div className="flex flex-col md:flex-row justify-between gap-12 mb-16">
                     {/* Brand */}

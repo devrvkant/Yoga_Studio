@@ -40,7 +40,6 @@ export function ContactPage() {
                 </div>
 
                 <div className="relative z-10 max-w-4xl mx-auto text-white">
-                    <span className="text-white/90 text-sm md:text-base font-medium uppercase tracking-widest mb-4 block drop-shadow-md">Home / Contact</span>
                     <h1 className="text-5xl md:text-7xl font-display font-bold mb-6 drop-shadow-lg">Get in Touch</h1>
                     <p className="text-white/95 text-lg md:text-xl font-medium max-w-2xl mx-auto drop-shadow-md">
                         We're here to answer any questions you may have about our classes, courses, or studio.
@@ -48,30 +47,11 @@ export function ContactPage() {
                 </div>
             </section>
 
-            {/* Info Cards Section */}
-            <section className="py-16 -mt-16 relative z-20 px-6">
-                <div className="container mx-auto max-w-6xl">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {contactInfo.map((info, idx) => (
-                            <a
-                                key={idx}
-                                href={info.link}
-                                className="bg-white p-8 rounded-xl shadow-lg border border-border-soft flex flex-col items-center text-center hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
-                            >
-                                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4">
-                                    <info.icon size={24} />
-                                </div>
-                                <h3 className="text-xl font-bold text-foreground mb-2">{info.title}</h3>
-                                <p className="text-muted font-light">{info.details}</p>
-                            </a>
-                        ))}
-                    </div>
-                </div>
-            </section>
+            {/* Info Cards Section Removed */}
 
             {/* Form Section */}
             <section className="py-16 bg-background">
-                <div className="container mx-auto px-6 max-w-4xl">
+                <div className="container mx-auto px-6 max-w-6xl">
                     <div className="bg-white rounded-2xl shadow-sm border border-border-soft overflow-hidden">
                         <div className="grid grid-cols-1 md:grid-cols-5">
                             {/* Form Side */}
@@ -142,27 +122,7 @@ export function ContactPage() {
                 </div>
             </section>
 
-            {/* Map Section */}
-            <section className="pb-24 pt-8 bg-background">
-                <div className="container mx-auto px-6 max-w-6xl text-center">
-                    <h2 className="text-3xl font-display font-bold text-foreground mb-4">Visit Our Studio</h2>
-                    <p className="text-muted mb-10 font-light">Find us in the heart of Peaceful Valley</p>
-
-                    <div className="w-full h-[400px] rounded-2xl overflow-hidden shadow-sm border border-border-soft bg-gray-100 relative grayscale hover:grayscale-0 transition-all duration-500">
-                        {/* Placeholder for map */}
-                        <iframe
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d105750.37038165039!2d-118.41173249999999!3d34.0201613!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80c2c75ddc27da13%3A0xe22fdf6f254608f4!2sLos%20Angeles%2C%20CA!5e0!3m2!1sen!2sus!4v1709490000000!5m2!1sen!2sus"
-                            width="100%"
-                            height="100%"
-                            style={{ border: 0 }}
-                            allowFullScreen=""
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                            title="Google Map"
-                        ></iframe>
-                    </div>
-                </div>
-            </section>
+            {/* Map Section Removed */}
 
 
         </div>

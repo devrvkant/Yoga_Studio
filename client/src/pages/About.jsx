@@ -44,8 +44,10 @@ export function About() {
                     <div className="absolute inset-0 bg-black/30" />
                 </div>
                 <div className="relative z-10 text-center text-white px-6 pt-20">
-                    <span className="text-white/90 text-sm md:text-base font-medium uppercase tracking-widest mb-4 block drop-shadow-md">Home / About Us</span>
                     <h1 className="text-5xl md:text-7xl font-display font-bold mb-6 drop-shadow-lg">Our Story</h1>
+                    <p className="text-white/95 text-lg md:text-xl font-medium max-w-2xl mx-auto drop-shadow-md">
+                        A journey of mindfulness, movement, and community dedicated to your personal growth and well-being.
+                    </p>
                 </div>
             </section>
 
