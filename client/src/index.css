@@ -58,3 +58,117 @@ h2 {
 .font-sans {
   font-family: "Inter", sans-serif;
 }
+
+/* ===== Global Cursor Pointer for All Clickable Elements ===== */
+
+/* Buttons and button-like elements */
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.btn {
+  cursor: pointer;
+}
+
+/* Links */
+a,
+[role="link"] {
+  cursor: pointer;
+}
+
+/* Form interactive elements */
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"],
+input[type="range"],
+select,
+label[for] {
+  cursor: pointer;
+}
+
+/* Clickable cards and interactive containers */
+[onclick],
+[data-clickable],
+[role="menuitem"],
+[role="option"],
+[role="tab"],
+[role="switch"],
+[role="checkbox"],
+[role="radio"],
+[role="listitem"][onclick] {
+  cursor: pointer;
+}
+
+/* Navigation elements */
+nav a,
+.nav-link,
+.menu-item,
+.sidebar-item,
+.sidebar-link {
+  cursor: pointer;
+}
+
+/* Common UI patterns */
+.clickable,
+.interactive,
+.selectable,
+.toggle,
+.dropdown-trigger,
+.accordion-trigger,
+.tab-trigger,
+.modal-trigger,
+.dialog-trigger {
+  cursor: pointer;
+}
+
+/* Icon buttons and close buttons */
+.icon-btn,
+.close-btn,
+.close-button,
+[aria-label*="close"],
+[aria-label*="Close"],
+[aria-label*="toggle"],
+[aria-label*="Toggle"],
+[aria-label*="menu"],
+[aria-label*="Menu"] {
+  cursor: pointer;
+}
+
+/* Pagination controls */
+.pagination button,
+.pagination a,
+.page-link,
+.page-btn {
+  cursor: pointer;
+}
+
+/* Filter and sort controls */
+.filter-btn,
+.filter-pill,
+.sort-btn,
+.chip {
+  cursor: pointer;
+}
+
+/* Cards with hover effects (likely clickable) */
+.card:hover,
+.course-card,
+.class-card {
+  cursor: pointer;
+}
+
+/* Sidebar toggles */
+.sidebar-toggle,
+.menu-toggle,
+.hamburger,
+.burger-menu {
+  cursor: pointer;
+}
+
+/* Ensure SVG icons inside buttons are pointer */
+button svg,
+a svg,
+[role="button"] svg {
+  pointer-events: none;
+}
