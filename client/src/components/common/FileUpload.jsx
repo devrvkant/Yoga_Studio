@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { X, Image as ImageIcon, Film } from 'lucide-react';
+import { VideoPlayer } from '../video/VideoPlayer';
 import { toast } from 'sonner';
 
 // Warning component for missing config
@@ -71,10 +72,10 @@ const FileUpload = ({ value, onChange, type = 'image', label, disabled }) => {
                         </div>
                     ) : (
                         <div className="relative h-48 w-full bg-black flex items-center justify-center">
-                            <video
+                            <VideoPlayer
                                 src={previewUrl}
-                                className="h-full w-full object-contain"
-                                controls
+                                className="h-full w-full"
+                                autoPlay={false}
                             />
                         </div>
                     )}

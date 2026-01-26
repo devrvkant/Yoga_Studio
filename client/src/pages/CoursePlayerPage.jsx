@@ -1,11 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetCourseQuery } from '../features/admin/course/courseApi';
 import { useGetSessionsByCourseQuery } from '../features/admin/session/sessionApi';
 import { ChevronLeft, Play, Clock, CheckCircle2, Lock, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { VideoPlayer } from '../components/video';
 
-export function CoursePlayerPage() {
+export function CoursePlayerPage({
+    backLink = '/dashboard/my-courses',
+    backText = 'Back to My Courses'
+}) {
     const { courseId } = useParams();
     const navigate = useNavigate();
 
@@ -17,13 +21,30 @@ export function CoursePlayerPage() {
     const sessions = sessionsData?.data || [];
 
     const [currentSession, setCurrentSession] = useState(null);
+    const [currentSessionIndex, setCurrentSessionIndex] = useState(0);
 
     // Set first session as default when data loads
     useEffect(() => {
         if (sessions.length > 0 && !currentSession) {
             setCurrentSession(sessions[0]);
+            setCurrentSessionIndex(0);
         }
     }, [sessions, currentSession]);
+
+    // Handle video end - auto-advance to next session
+    const handleVideoEnded = useCallback(() => {
+        if (currentSessionIndex < sessions.length - 1) {
+            const nextIndex = currentSessionIndex + 1;
+            setCurrentSession(sessions[nextIndex]);
+            setCurrentSessionIndex(nextIndex);
+        }
+    }, [currentSessionIndex, sessions]);
+
+    // Handle session selection
+    const handleSessionSelect = useCallback((session, index) => {
+        setCurrentSession(session);
+        setCurrentSessionIndex(index);
+    }, []);
 
     if (isCourseLoading || isSessionsLoading) {
         return (
@@ -37,7 +58,7 @@ export function CoursePlayerPage() {
         return (
             <div className="flex flex-col items-center justify-center h-screen bg-background p-6">
                 <h2 className="text-2xl font-bold mb-4">Course not found</h2>
-                <Button onClick={() => navigate('/courses')}>Back to Courses</Button>
+                <Button onClick={() => navigate(backLink)}>{backText}</Button>
             </div>
         );
     }
@@ -48,7 +69,7 @@ export function CoursePlayerPage() {
             <header className="flex items-center justify-between px-6 py-4 bg-[#1e293b] border-b border-slate-700 shrink-0">
                 <div className="flex items-center gap-4">
                     <button
-                        onClick={() => navigate('/dashboard')}
+                        onClick={() => navigate(backLink)}
                         className="p-2 hover:bg-slate-700 rounded-full transition-colors"
                     >
                         <ArrowLeft size={20} />
@@ -68,22 +89,15 @@ export function CoursePlayerPage() {
                 <main className="flex-grow overflow-y-auto p-4 lg:p-8">
                     <div className="max-w-5xl mx-auto">
                         {/* Video Player Container */}
-                        <div className="aspect-video bg-black rounded-xl overflow-hidden shadow-2xl relative mb-8 group">
-                            {currentSession?.video ? (
-                                <video
-                                    key={currentSession._id}
-                                    src={currentSession.video}
-                                    controls
-                                    className="w-full h-full"
-                                    poster={currentSession.thumbnail || course.image}
-                                    autoPlay
-                                />
-                            ) : (
-                                <div className="flex flex-col items-center justify-center h-full text-slate-500">
-                                    <Play size={64} className="mb-4 opacity-20" />
-                                    <p>Select a session to start learning</p>
-                                </div>
-                            )}
+                        <div className="mb-8">
+                            <VideoPlayer
+                                key={currentSession?._id}
+                                src={currentSession?.video}
+                                poster={currentSession?.thumbnail || course.image}
+                                title={currentSession?.title}
+                                autoPlay={true}
+                                onEnded={handleVideoEnded}
+                            />
                         </div>
 
                         {/* Session Details */}
@@ -125,8 +139,8 @@ export function CoursePlayerPage() {
                                     return (
                                         <button
                                             key={session._id}
-                                            onClick={() => setCurrentSession(session)}
-                                            className={`w-full flex items-start gap-4 p-5 transition-all text-left hover:bg-slate-800/50 ${isActive ? 'bg-primary/10 border-l-4 border-primary' : ''
+                                            onClick={() => handleSessionSelect(session, idx)}
+                                            className={`w-full cursor-pointer flex items-start gap-4 p-5 transition-all text-left hover:bg-slate-800/50 ${isActive ? 'bg-primary/10 border-l-4 border-primary' : ''
                                                 }`}
                                         >
                                             <div className={`mt-1 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${isActive ? 'bg-primary text-primary-foreground' : 'bg-slate-800 text-slate-400'

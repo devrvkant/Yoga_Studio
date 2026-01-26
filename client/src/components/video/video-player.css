@@ -1,0 +1,687 @@
+/* ===============================================
+   Professional Video Player Styles
+   Yoga Studio Theme
+   =============================================== */
+
+/* -----------------------------------------------
+   CSS Variables
+   ----------------------------------------------- */
+.yoga-video-player {
+    --player-bg: #0f172a;
+    --player-border-radius: 0.75rem;
+    --player-accent: #0d9488;
+    --player-accent-hover: #0f766e;
+    --player-text: #f1f5f9;
+    --player-text-muted: #94a3b8;
+    --player-overlay-bg: rgba(15, 23, 42, 0.85);
+    --player-controls-bg: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+    --player-transition: 0.2s ease;
+}
+
+/* -----------------------------------------------
+   Player Container
+   ----------------------------------------------- */
+.yoga-video-player {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: var(--player-bg);
+    border-radius: var(--player-border-radius);
+    overflow: hidden;
+    position: relative;
+    outline: none;
+    user-select: none;
+}
+
+.yoga-video-player:focus-visible {
+    box-shadow: 0 0 0 3px var(--player-accent);
+}
+
+.yoga-video-player.fullscreen {
+    border-radius: 0;
+}
+
+/* -----------------------------------------------
+   Overlay Base Styles
+   ----------------------------------------------- */
+.yoga-player-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem;
+    text-align: center;
+    z-index: 20;
+    pointer-events: auto;
+}
+
+.yoga-player-overlay-icon {
+    width: 48px;
+    height: 48px;
+    opacity: 0.9;
+}
+
+.yoga-player-overlay-title {
+    color: var(--player-text);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.yoga-player-overlay-message {
+    color: var(--player-text-muted);
+    font-size: 0.875rem;
+    margin: 0;
+    max-width: 300px;
+}
+
+/* -----------------------------------------------
+   Loading/Buffering Overlay
+   ----------------------------------------------- */
+.yoga-player-loading {
+    background: rgba(15, 23, 42, 0.5);
+    z-index: 15;
+    pointer-events: none;
+}
+
+.yoga-player-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(13, 148, 136, 0.3);
+    border-top-color: var(--player-accent);
+    border-radius: 50%;
+    animation: spinner 0.8s linear infinite;
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* -----------------------------------------------
+   Offline Overlay
+   ----------------------------------------------- */
+.yoga-player-offline {
+    background: var(--player-overlay-bg);
+    z-index: 25;
+}
+
+.yoga-player-offline .yoga-player-overlay-icon {
+    color: #f59e0b;
+}
+
+/* -----------------------------------------------
+   Error Overlay
+   ----------------------------------------------- */
+.yoga-player-error {
+    background: #1e293b;
+    z-index: 20;
+}
+
+.yoga-player-error .yoga-player-overlay-icon {
+    color: #ef4444;
+}
+
+.yoga-player-retry-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--player-accent);
+    color: white;
+    border: none;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--player-transition);
+    margin-top: 0.5rem;
+}
+
+.yoga-player-retry-btn:hover {
+    background: var(--player-accent-hover);
+}
+
+/* -----------------------------------------------
+   Resume Prompt Overlay
+   ----------------------------------------------- */
+.yoga-player-resume {
+    background: var(--player-overlay-bg);
+    z-index: 22;
+}
+
+.yoga-player-resume-icon {
+    color: var(--player-accent);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+.yoga-player-resume-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.yoga-player-resume-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--player-transition);
+    border: none;
+}
+
+.yoga-player-resume-btn-primary {
+    background: var(--player-accent);
+    color: white;
+}
+
+.yoga-player-resume-btn-primary:hover {
+    background: var(--player-accent-hover);
+    transform: scale(1.02);
+}
+
+.yoga-player-resume-btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--player-text);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.yoga-player-resume-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 640px) {
+    .yoga-player-resume-actions {
+        flex-direction: column;
+        width: 100%;
+        max-width: 200px;
+    }
+
+    .yoga-player-resume-btn {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+/* -----------------------------------------------
+   Big Play Button
+   ----------------------------------------------- */
+.yoga-player-big-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: rgba(13, 148, 136, 0.9);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: transform 0.15s ease, background var(--player-transition);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+.yoga-player-big-play:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+    background: var(--player-accent);
+}
+
+.yoga-player-big-play svg {
+    margin-left: 4px;
+    /* Visual centering for play icon */
+}
+
+/* -----------------------------------------------
+   Click Overlay (for play/pause toggle)
+   ----------------------------------------------- */
+.yoga-player-click-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    cursor: pointer;
+}
+
+/* -----------------------------------------------
+   Controls Container
+   ----------------------------------------------- */
+.yoga-player-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--player-controls-bg);
+    padding: 2rem 1rem 1rem;
+    z-index: 10;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.yoga-player-controls.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.yoga-player-controls.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* -----------------------------------------------
+   Progress Bar
+   ----------------------------------------------- */
+.yoga-player-progress {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    cursor: pointer;
+    margin-bottom: 0.75rem;
+    position: relative;
+    transition: height 0.1s ease;
+}
+
+.yoga-player-progress:hover {
+    height: 6px;
+}
+
+.yoga-player-progress-buffer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    pointer-events: none;
+}
+
+.yoga-player-progress-filled {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: var(--player-accent);
+    border-radius: 2px;
+    pointer-events: none;
+    transition: width 0.05s linear;
+}
+
+.yoga-player-progress-handle {
+    position: absolute;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    background: var(--player-accent);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.15s ease;
+    pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.yoga-player-progress:hover .yoga-player-progress-handle {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Progress Tooltip */
+.yoga-player-progress-tooltip {
+    position: absolute;
+    bottom: 100%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    margin-bottom: 8px;
+    pointer-events: none;
+}
+
+/* -----------------------------------------------
+   Controls Row
+   ----------------------------------------------- */
+.yoga-player-controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.yoga-player-controls-left,
+.yoga-player-controls-right {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* -----------------------------------------------
+   Control Button
+   ----------------------------------------------- */
+.yoga-player-btn {
+    background: transparent;
+    border: none;
+    color: var(--player-text);
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--player-transition), color var(--player-transition);
+}
+
+.yoga-player-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--player-accent);
+}
+
+.yoga-player-btn.active {
+    color: var(--player-accent);
+}
+
+/* -----------------------------------------------
+   Volume Control
+   ----------------------------------------------- */
+.yoga-player-volume-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.yoga-player-volume-slider-container {
+    width: 0;
+    overflow: hidden;
+    transition: width 0.2s ease, opacity 0.2s ease;
+    opacity: 0;
+}
+
+.yoga-player-volume-slider-container.visible {
+    width: 80px;
+    opacity: 1;
+    margin-left: 0.25rem;
+}
+
+.yoga-player-volume-slider {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+}
+
+.yoga-player-volume-filled {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: var(--player-accent);
+    border-radius: 2px;
+    pointer-events: none;
+}
+
+.yoga-player-volume-handle {
+    position: absolute;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    background: white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* -----------------------------------------------
+   Time Display
+   ----------------------------------------------- */
+.yoga-player-time {
+    color: var(--player-text);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-family: 'Inter', system-ui, sans-serif;
+    margin-left: 0.5rem;
+    white-space: nowrap;
+}
+
+/* -----------------------------------------------
+   Speed Indicator
+   ----------------------------------------------- */
+.yoga-player-speed-indicator {
+    color: var(--player-accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(13, 148, 136, 0.15);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    margin-right: 0.25rem;
+}
+
+/* -----------------------------------------------
+   Settings Menu
+   ----------------------------------------------- */
+.yoga-settings-container {
+    position: relative;
+}
+
+.yoga-settings-panel {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 0.5rem;
+    background: #1e293b;
+    border-radius: 0.5rem;
+    min-width: 220px;
+    max-height: 280px;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    z-index: 50;
+    animation: slideUp 0.15s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.yoga-settings-menu {
+    padding: 0.5rem 0;
+}
+
+.yoga-settings-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.625rem 1rem;
+    background: transparent;
+    border: none;
+    color: var(--player-text);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background var(--player-transition);
+    text-align: left;
+}
+
+.yoga-settings-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.yoga-settings-item.active {
+    color: var(--player-accent);
+}
+
+.yoga-settings-item-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.yoga-settings-item-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--player-text-muted);
+}
+
+.yoga-settings-back {
+    padding-left: 0.75rem;
+    color: var(--player-text-muted);
+    font-weight: 500;
+}
+
+.yoga-settings-back:hover {
+    color: var(--player-text);
+}
+
+.yoga-settings-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0.25rem 0;
+}
+
+.yoga-settings-check {
+    color: var(--player-accent);
+}
+
+.yoga-settings-label {
+    color: var(--player-text-muted);
+    font-size: 0.75rem;
+}
+
+/* -----------------------------------------------
+   Mobile Responsive
+   ----------------------------------------------- */
+@media (max-width: 640px) {
+    .yoga-video-player {
+        border-radius: 0;
+    }
+
+    .yoga-player-controls {
+        padding: 1.5rem 0.75rem 0.75rem;
+    }
+
+    .yoga-player-btn {
+        padding: 0.375rem;
+    }
+
+    .yoga-player-time {
+        font-size: 0.75rem;
+    }
+
+    .yoga-player-big-play {
+        width: 60px;
+        height: 60px;
+    }
+
+    .yoga-player-big-play svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .yoga-player-volume-slider-container.visible {
+        width: 60px;
+    }
+
+    .yoga-settings-panel {
+        min-width: 180px;
+    }
+
+    .yoga-settings-item {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+}
+
+/* -----------------------------------------------
+   Fullscreen Adjustments
+   ----------------------------------------------- */
+.yoga-video-player:fullscreen,
+.yoga-video-player:-webkit-full-screen {
+    border-radius: 0;
+}
+
+.yoga-video-player:fullscreen .yoga-player-controls,
+.yoga-video-player:-webkit-full-screen .yoga-player-controls {
+    padding: 2rem 1.5rem 1.5rem;
+}
+
+.yoga-video-player:fullscreen .yoga-player-progress,
+.yoga-video-player:-webkit-full-screen .yoga-player-progress {
+    height: 5px;
+}
+
+.yoga-video-player:fullscreen .yoga-player-big-play,
+.yoga-video-player:-webkit-full-screen .yoga-player-big-play {
+    width: 100px;
+    height: 100px;
+}
+
+/* -----------------------------------------------
+   Touch Device Adjustments
+   ----------------------------------------------- */
+@media (hover: none) {
+    .yoga-player-volume-slider-container {
+        display: none;
+    }
+
+    .yoga-player-progress-handle {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    .yoga-player-controls {
+        padding-top: 2.5rem;
+    }
+}
+
+/* -----------------------------------------------
+   Accessibility
+   ----------------------------------------------- */
+.yoga-player-btn:focus-visible {
+    outline: 2px solid var(--player-accent);
+    outline-offset: 2px;
+}
+
+.yoga-settings-item:focus-visible {
+    outline: 2px solid var(--player-accent);
+    outline-offset: -2px;
+}
+
+.yoga-player-retry-btn:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 2px;
+}
