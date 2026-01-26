@@ -1,11 +1,12 @@
-import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, BookOpen, LogOut, ArrowLeft } from 'lucide-react';
+import React from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { LayoutDashboard, BookOpen, Calendar, LogOut, Home, ArrowLeft } from 'lucide-react';
 import { useDispatch } from 'react-redux';
+import { toast } from 'sonner';
 import { logout as logoutAction } from '../../features/auth/authSlice';
 import { useLogoutMutation, authApi } from '../../features/auth/authApi';
-import { toast } from 'sonner';
 import {
-    Sidebar as SidebarContainer,
+    Sidebar,
     SidebarHeader,
     SidebarContent,
     SidebarFooter,
@@ -13,37 +14,15 @@ import {
     SidebarTrigger,
     useSidebar
 } from '../ui/sidebar';
+import logoImg from '../../assets/logos/logo.png';
 import { cn } from '../../lib/utils';
 
-const Sidebar = () => {
+export function StudentSidebar() {
     const location = useLocation();
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [logoutApi] = useLogoutMutation();
     const { open } = useSidebar();
-
-    const menuItems = [
-        {
-            title: 'Dashboard',
-            icon: LayoutDashboard,
-            path: '/admin',
-        },
-        {
-            title: 'Enrollments',
-            icon: Users,
-            path: '/admin/enrollments',
-        },
-        {
-            title: 'Manage Classes',
-            icon: Users,
-            path: '/admin/classes',
-        },
-        {
-            title: 'Manage Courses',
-            icon: BookOpen,
-            path: '/admin/courses',
-        },
-    ];
 
     const handleLogout = async () => {
         try {
@@ -60,34 +39,43 @@ const Sidebar = () => {
         }
     };
 
+    const links = [
+        { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+        { name: 'My Classes', path: '/dashboard/my-classes', icon: Calendar },
+        { name: 'My Courses', path: '/dashboard/my-courses', icon: BookOpen },
+        { name: 'Back to Home', path: '/', icon: Home },
+    ];
+
     return (
-        <SidebarContainer>
+        <Sidebar>
             <SidebarHeader className="flex justify-between items-center">
                 <div className={cn("flex items-center gap-3 overflow-hidden transition-all duration-300", open ? "opacity-100" : "opacity-0 w-0")}>
                     <Link to="/" className="p-1 hover:bg-muted rounded-full transition-colors shrink-0" title="Back to Home">
                         <ArrowLeft size={18} className="text-muted-foreground hover:text-foreground" />
                     </Link>
-                    <span className="text-xl font-display font-bold text-foreground whitespace-nowrap">
-                        Admin Panel
-                    </span>
+                    <span className="font-display font-bold text-xl whitespace-nowrap">Student Portal</span>
                 </div>
                 <SidebarTrigger />
             </SidebarHeader>
 
             <SidebarContent>
-                {menuItems.map((item) => {
-                    const isActive = location.pathname === item.path ||
-                        (item.path !== '/admin' && location.pathname.startsWith(item.path + '/'));
+                {links.map((link) => {
+                    // Improved matching for active state
+                    const isActive = link.path === '/'
+                        ? location.pathname === '/'
+                        : link.path === '/dashboard'
+                            ? location.pathname === link.path
+                            : location.pathname.startsWith(link.path);
 
                     return (
                         <SidebarItem
-                            key={item.path}
-                            to={item.path}
-                            icon={item.icon}
-                            label={item.title}
+                            key={link.path}
+                            to={link.path}
+                            icon={link.icon}
+                            label={link.name}
                             isActive={isActive}
                         />
-                    )
+                    );
                 })}
             </SidebarContent>
 
@@ -96,11 +84,9 @@ const Sidebar = () => {
                     icon={LogOut}
                     label="Logout"
                     onClick={handleLogout}
-                    className="text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 />
             </SidebarFooter>
-        </SidebarContainer>
+        </Sidebar>
     );
-};
-
-export default Sidebar;
+}
