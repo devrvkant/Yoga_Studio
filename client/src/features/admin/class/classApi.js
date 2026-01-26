@@ -6,10 +6,13 @@ export const classApi = createApi({
     tagTypes: ['Class'],
     endpoints: (builder) => ({
         getClasses: builder.query({
-            query: ({ page = 1, limit = 12, level = '' } = {}) => {
+            query: ({ page = 1, limit = 12, level = '', search = '' } = {}) => {
                 let url = `/api/classes?page=${page}&limit=${limit}`;
                 if (level && level !== 'All Classes') {
                     url += `&level=${encodeURIComponent(level)}`;
+                }
+                if (search && search.trim()) {
+                    url += `&search=${encodeURIComponent(search.trim())}`;
                 }
                 return url;
             },

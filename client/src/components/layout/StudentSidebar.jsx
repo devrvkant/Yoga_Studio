@@ -1,4 +1,3 @@
-import React from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { LayoutDashboard, BookOpen, Calendar, LogOut, Home, ArrowLeft } from 'lucide-react';
 import { useDispatch } from 'react-redux';
@@ -14,7 +13,6 @@ import {
     SidebarTrigger,
     useSidebar
 } from '../ui/sidebar';
-import logoImg from '../../assets/logos/logo.png';
 import { cn } from '../../lib/utils';
 
 export function StudentSidebar() {

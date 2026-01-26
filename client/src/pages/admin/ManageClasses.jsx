@@ -491,6 +491,7 @@ const ManageClasses = () => {
                             <tr>
                                 <th className="px-6 py-4">Title</th>
                                 <th className="px-6 py-4">Instructor</th>
+                                <th className="px-6 py-4">Price</th>
                                 <th className="px-6 py-4">Duration</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
@@ -498,7 +499,7 @@ const ManageClasses = () => {
                         <tbody className="divide-y divide-border/50">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-8 text-center text-muted-foreground">
+                                    <td colSpan="5" className="px-6 py-8 text-center text-muted-foreground">
                                         <div className="flex items-center justify-center">
                                             <Loader2 className="w-6 h-6 animate-spin text-primary mr-2" />
                                             Loading classes...
@@ -507,7 +508,7 @@ const ManageClasses = () => {
                                 </tr>
                             ) : filteredClasses.length === 0 ? (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-8 text-center text-muted-foreground">
+                                    <td colSpan="5" className="px-6 py-8 text-center text-muted-foreground">
                                         No classes found.
                                     </td>
                                 </tr>
@@ -516,6 +517,9 @@ const ManageClasses = () => {
                                     <tr key={cls._id} className="hover:bg-muted/20 transition-colors">
                                         <td className="px-6 py-4 font-medium text-foreground">{cls.title}</td>
                                         <td className="px-6 py-4">{cls.instructor}</td>
+                                        <td className="px-6 py-4">
+                                            {cls.price && cls.price > 0 ? `€${cls.price}` : 'Free'}
+                                        </td>
                                         <td className="px-6 py-4">{cls.duration} mins</td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">

@@ -293,8 +293,8 @@ const ManageCourses = () => {
             {/* Modal/Dialog */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-card w-full max-w-lg rounded-xl shadow-lg border border-border animate-in fade-in zoom-in duration-200">
-                        <div className="flex items-center justify-between p-6 border-b border-border">
+                    <div className="bg-card w-full max-w-lg rounded-xl shadow-lg border border-border animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-6 border-b border-border shrink-0">
                             <h2 className="text-xl font-bold font-display">
                                 {editingCourse ? 'Edit Course' : 'Add New Course'}
                             </h2>
@@ -307,154 +307,156 @@ const ManageCourses = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none">Course Title</label>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    required
-                                    value={formData.title}
-                                    onChange={handleChange}
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    placeholder="e.g. 30-Day Yoga Challenge"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
+                        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+                            <div className="p-6 space-y-4 overflow-y-auto">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium leading-none">Instructor</label>
+                                    <label className="text-sm font-medium leading-none">Course Title</label>
                                     <input
                                         type="text"
-                                        name="instructor"
-                                        value={formData.instructor}
+                                        name="title"
+                                        required
+                                        value={formData.title}
                                         onChange={handleChange}
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                        placeholder="Minh Le"
+                                        placeholder="e.g. 30-Day Yoga Challenge"
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium leading-none">Level</label>
-                                    <select
-                                        name="level"
-                                        value={formData.level}
-                                        onChange={handleChange}
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    >
-                                        <option value="All Levels">All Levels</option>
-                                        <option value="Beginner">Beginner</option>
-                                        <option value="Intermediate">Intermediate</option>
-                                        <option value="Advanced">Advanced</option>
-                                    </select>
-                                </div>
-                            </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium leading-none">Duration</label>
-                                    <input
-                                        type="text"
-                                        name="duration"
-                                        value={formData.duration}
-                                        onChange={handleChange}
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                        placeholder="e.g. 4 Weeks"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium leading-none">Sessions</label>
-                                    <input
-                                        type="text"
-                                        name="sessions"
-                                        value={formData.sessions}
-                                        onChange={handleChange}
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                        placeholder="e.g. 8 Sessions"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-sm font-medium leading-none">Price (€)</label>
-                                    <div className="flex items-center space-x-2">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium leading-none">Instructor</label>
                                         <input
-                                            type="checkbox"
-                                            name="isPaid"
-                                            id="isPaid"
-                                            checked={formData.isPaid}
+                                            type="text"
+                                            name="instructor"
+                                            value={formData.instructor}
                                             onChange={handleChange}
-                                            className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary"
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                            placeholder="Minh Le"
                                         />
-                                        <label htmlFor="isPaid" className="text-xs cursor-pointer select-none text-muted-foreground">
-                                            Paid Course
-                                        </label>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium leading-none">Level</label>
+                                        <select
+                                            name="level"
+                                            value={formData.level}
+                                            onChange={handleChange}
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        >
+                                            <option value="All Levels">All Levels</option>
+                                            <option value="Beginner">Beginner</option>
+                                            <option value="Intermediate">Intermediate</option>
+                                            <option value="Advanced">Advanced</option>
+                                        </select>
                                     </div>
                                 </div>
-                                <input
-                                    type="number"
-                                    name="price"
-                                    min="0"
-                                    step="0.01"
-                                    value={formData.price}
-                                    onChange={handleChange}
-                                    disabled={!formData.isPaid}
-                                    className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${!formData.isPaid ? 'opacity-50 cursor-not-allowed bg-muted' : ''}`}
-                                    placeholder="0.00"
-                                />
-                            </div>
 
-                            {/* Digistore Product ID - only shown for paid courses */}
-                            {formData.isPaid && (
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium leading-none">Digistore24 Product ID</label>
-                                    <input
-                                        type="text"
-                                        name="digistoreProductId"
-                                        required={formData.isPaid}
-                                        value={formData.digistoreProductId}
-                                        onChange={handleChange}
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                        placeholder="e.g. 123456"
-                                    />
-                                    <p className="text-xs text-muted-foreground">Product ID from your Digistore24 dashboard</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium leading-none">Duration</label>
+                                        <input
+                                            type="text"
+                                            name="duration"
+                                            value={formData.duration}
+                                            onChange={handleChange}
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                            placeholder="e.g. 4 Weeks"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium leading-none">Sessions</label>
+                                        <input
+                                            type="text"
+                                            name="sessions"
+                                            value={formData.sessions}
+                                            onChange={handleChange}
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                            placeholder="e.g. 8 Sessions"
+                                        />
+                                    </div>
                                 </div>
-                            )}
 
-                            <div>
-                                <FileUpload
-                                    label="Course Image"
-                                    type="image"
-                                    value={formData.image}
-                                    onChange={(url) => setFormData(prev => ({ ...prev, image: url }))}
-                                />
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-medium leading-none">Price (€)</label>
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                name="isPaid"
+                                                id="isPaid"
+                                                checked={formData.isPaid}
+                                                onChange={handleChange}
+                                                className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary"
+                                            />
+                                            <label htmlFor="isPaid" className="text-xs cursor-pointer select-none text-muted-foreground">
+                                                Paid Course
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        name="price"
+                                        min="0"
+                                        step="0.01"
+                                        value={formData.price}
+                                        onChange={handleChange}
+                                        disabled={!formData.isPaid}
+                                        className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${!formData.isPaid ? 'opacity-50 cursor-not-allowed bg-muted' : ''}`}
+                                        placeholder="0.00"
+                                    />
+                                </div>
+
+                                {/* Digistore Product ID - only shown for paid courses */}
+                                {formData.isPaid && (
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium leading-none">Digistore24 Product ID</label>
+                                        <input
+                                            type="text"
+                                            name="digistoreProductId"
+                                            required={formData.isPaid}
+                                            value={formData.digistoreProductId}
+                                            onChange={handleChange}
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                            placeholder="e.g. 123456"
+                                        />
+                                        <p className="text-xs text-muted-foreground">Product ID from your Digistore24 dashboard</p>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <FileUpload
+                                        label="Course Image"
+                                        type="image"
+                                        value={formData.image}
+                                        onChange={(url) => setFormData(prev => ({ ...prev, image: url }))}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium leading-none">Learning Points (comma separated)</label>
+                                    <textarea
+                                        name="learnPoints"
+                                        value={formData.learnPoints}
+                                        onChange={handleChange}
+                                        rows="2"
+                                        className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        placeholder="Point 1, Point 2, Point 3..."
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium leading-none">Description</label>
+                                    <textarea
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleChange}
+                                        rows="3"
+                                        className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        placeholder="Enter course description..."
+                                    />
+                                </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none">Learning Points (comma separated)</label>
-                                <textarea
-                                    name="learnPoints"
-                                    value={formData.learnPoints}
-                                    onChange={handleChange}
-                                    rows="2"
-                                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    placeholder="Point 1, Point 2, Point 3..."
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none">Description</label>
-                                <textarea
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleChange}
-                                    rows="3"
-                                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    placeholder="Enter course description..."
-                                />
-                            </div>
-
-                            <div className="flex justify-end gap-3 pt-4">
+                            <div className="flex justify-end gap-3 p-6 border-t border-border shrink-0">
                                 <button
                                     type="button"
                                     onClick={handleCloseModal}

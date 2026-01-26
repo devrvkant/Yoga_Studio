@@ -107,7 +107,7 @@ const Enrollments = () => {
                         >
                             <option value="all">All Users</option>
                             <option value="premium">Premium Students</option>
-                            <option value="active">Active Students</option>
+                            <option value="active">Free Students</option>
                             <option value="registered">Registered Users</option>
                         </select>
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">

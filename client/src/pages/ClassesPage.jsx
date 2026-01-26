@@ -1,27 +1,20 @@
-import { useState, useEffect } from 'react'
-import { Clock, Users, ArrowRight, User } from 'lucide-react'
+import { useState } from 'react'
+import { Clock, Users, User, ArrowRight } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { cn } from '../lib/utils'
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useGetClassesQuery, useEnrollClassMutation } from '../features/admin/class/classApi';
 import { useGetMeQuery } from '../features/auth/authApi';
 import EmptyState from '../components/common/EmptyState';
-import Pagination from '../components/common/Pagination';
 
 export function ClassesPage() {
-    const [searchParams, setSearchParams] = useSearchParams();
     const [activeFilter, setActiveFilter] = useState("All Classes");
-    const [currentPage, setCurrentPage] = useState(1);
 
-    // Reset page when filter changes
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [activeFilter]);
-
+    // Fetch only 6 items for overview page
     const { data: classesData, isLoading, isFetching } = useGetClassesQuery({
-        page: currentPage,
-        limit: 12,
+        page: 1,
+        limit: 6,
         level: activeFilter
     });
 
@@ -30,12 +23,11 @@ export function ClassesPage() {
     const navigate = useNavigate();
 
     const classes = classesData?.data || [];
-    const totalPages = classesData?.pagination?.pages || Math.ceil((classesData?.total || 0) / 12);
+    const totalClasses = classesData?.total || 0;
     const enrolledClassIds = userData?.data?.enrolledClasses?.map(c => c._id) || [];
     const filters = ["All Classes", "Beginner", "Intermediate", "Advanced"];
 
     const handleAction = async (cls) => {
-        // 1. Guest: Redirect to Login
         if (!userData) {
             toast.error("Please login to enroll");
             navigate('/login', { state: { from: '/classes' } });
@@ -44,32 +36,24 @@ export function ClassesPage() {
 
         const isEnrolled = enrolledClassIds.includes(cls._id);
 
-        // 2. Enrolled User: Go to Player
         if (isEnrolled) {
-            navigate(`/dashboard/my-classes/${cls._id}`); // Assuming this route exists or will exist
+            navigate(`/dashboard/my-classes/${cls._id}`);
             return;
         }
 
-        // 3. New User: Paid Class -> Checkout
         if (cls.isPaid) {
             navigate(`/checkout?type=class&id=${cls._id}`);
             return;
         }
 
-        // 4. New User: Free Class -> Enroll
         const toastId = toast.loading("Booking class...");
         try {
             await enrollClass(cls._id).unwrap();
-            await refetchUser(); // Refresh user data
+            await refetchUser();
             toast.success("Class booked successfully!", { id: toastId });
         } catch (err) {
             toast.error(err?.data?.message || "Booking failed", { id: toastId });
         }
-    };
-
-    const handlePageChange = (newPage) => {
-        setCurrentPage(newPage);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     return (
@@ -83,7 +67,6 @@ export function ClassesPage() {
                         alt="Yoga Class"
                         className="w-full h-full object-cover"
                     />
-                    {/* Minimal dark overlay for text contrast */}
                     <div className="absolute inset-0 bg-black/30" />
                 </div>
 
@@ -113,7 +96,7 @@ export function ClassesPage() {
                 </div>
             </section>
 
-            {/* Classes Grid */}
+            {/* Classes Grid - Max 6 items */}
             <section className="py-24 bg-background">
                 <div className="container mx-auto px-6 max-w-7xl">
                     {isLoading || isFetching ? (
@@ -146,7 +129,7 @@ export function ClassesPage() {
                                                 <span className={`px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider ${item.level === "Beginner" ? "bg-emerald-500" :
                                                     item.level === "Intermediate" ? "bg-teal-600" :
                                                         item.level === "Advanced" ? "bg-slate-800" :
-                                                            "bg-emerald-600" // Default/All Levels
+                                                            "bg-emerald-600"
                                                     }`}>
                                                     {item.level}
                                                 </span>
@@ -202,12 +185,21 @@ export function ClassesPage() {
                                 })}
                             </div>
 
-                            {/* Pagination */}
-                            <Pagination
-                                currentPage={currentPage}
-                                totalPages={classesData?.pagination?.pages || Math.ceil((classesData?.total || 0) / 12)}
-                                onPageChange={handlePageChange}
-                            />
+                            {/* Explore More Button */}
+                            {totalClasses > 6 && (
+                                <div className="text-center mt-16">
+                                    <Link to={`/classes/explore${activeFilter !== 'All Classes' ? `?level=${encodeURIComponent(activeFilter)}` : ''}`}>
+                                        <Button
+                                            variant="outline"
+                                            size="lg"
+                                            className="rounded-full px-10 py-6 text-base font-semibold group hover:bg-primary hover:text-white hover:border-primary transition-all duration-300"
+                                        >
+                                            Explore All {totalClasses} Classes
+                                            <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                                        </Button>
+                                    </Link>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
