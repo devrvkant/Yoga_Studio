@@ -3,7 +3,7 @@ import { LayoutDashboard, Users, BookOpen, LogOut, ArrowLeft } from 'lucide-reac
 import { cn } from '../../lib/utils';
 import { useDispatch } from 'react-redux';
 import { logout as logoutAction } from '../../features/auth/authSlice';
-import { useLogoutMutation } from '../../features/auth/authApi';
+import { useLogoutMutation, authApi } from '../../features/auth/authApi';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -40,11 +40,13 @@ const Sidebar = () => {
         try {
             await logoutApi().unwrap();
             dispatch(logoutAction());
+            dispatch(authApi.util.resetApiState());
             toast.success('Logged out successfully');
             navigate('/');
         } catch (err) {
             console.error('Logout failed', err);
             dispatch(logoutAction());
+            dispatch(authApi.util.resetApiState());
             navigate('/');
         }
     };

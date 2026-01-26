@@ -10,6 +10,7 @@ export const authApi = createApi({
                 method: 'POST',
                 body: credentials,
             }),
+            invalidatesTags: ['Me'],
         }),
         register: builder.mutation({
             query: (userData) => ({
@@ -23,6 +24,7 @@ export const authApi = createApi({
                 url: '/api/auth/logout',
                 method: 'GET',
             }),
+            invalidatesTags: ['Me', 'User'],
         }),
         getMe: builder.query({
             query: () => '/api/auth/me',

@@ -6,7 +6,7 @@ import logoImg from '../../assets/logos/logo.png'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { selectCurrentUser, logout as logoutAction } from '../../features/auth/authSlice'
-import { useLogoutMutation } from '../../features/auth/authApi'
+import { useLogoutMutation, authApi } from '../../features/auth/authApi'
 import { toast } from 'sonner'
 
 export function Navbar() {
@@ -25,12 +25,14 @@ export function Navbar() {
         try {
             await logoutApi().unwrap()
             dispatch(logoutAction())
+            dispatch(authApi.util.resetApiState())
             toast.success('Logged out successfully')
             navigate('/')
         } catch (err) {
             console.error('Logout failed', err)
             // Even if API fails, clear local state
             dispatch(logoutAction())
+            dispatch(authApi.util.resetApiState())
             navigate('/')
         }
     }
