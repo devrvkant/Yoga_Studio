@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
     useGetClassesQuery,
     useAddClassMutation,
@@ -9,6 +10,7 @@ import { Loader2, Plus, Pencil, Trash2, X, Check, Search, Pause, Play } from 'lu
 import { toast } from 'sonner';
 import FileUpload from '../../components/common/FileUpload';
 import { UploadOverlay, PendingUploadsPanel } from '../../components/upload';
+import { VideoPreviewModal } from '../../components/video';
 import {
     createUploadSession,
     startUpload,
@@ -38,6 +40,7 @@ const ManageClasses = () => {
         description: '',
         isPaid: false,
         price: '0',
+        digistoreProductId: '',
         duration: '',
         level: 'All Levels',
         image: '',
@@ -48,6 +51,8 @@ const ManageClasses = () => {
     const [activeUploads, setActiveUploads] = useState([]);
     // Pending uploads from previous session (needs file re-selection)
     const [pendingUploads, setPendingUploads] = useState([]);
+    // Video preview state
+    const [previewClass, setPreviewClass] = useState(null);
 
     // Check for pending uploads on mount
     useEffect(() => {
@@ -85,6 +90,7 @@ const ManageClasses = () => {
                 description: cls.description || '',
                 isPaid: cls.isPaid || false,
                 price: cls.price || '0',
+                digistoreProductId: cls.digistoreProductId || '',
                 duration: cls.duration,
                 level: cls.level || 'All Levels',
                 image: cls.image || '',
@@ -92,12 +98,14 @@ const ManageClasses = () => {
             });
         } else {
             setEditingClass(null);
+            setEditingClass(null);
             setFormData({
                 title: '',
                 instructor: '',
                 description: '',
                 isPaid: false,
                 price: '0',
+                digistoreProductId: '',
                 duration: '60',
                 level: 'All Levels',
                 image: '',
@@ -116,9 +124,10 @@ const ManageClasses = () => {
         const { name, value, type, checked } = e.target;
         setFormData(prev => {
             const updates = { [name]: type === 'checkbox' ? checked : value };
-            // Reset price if setting to free
+            // Reset price and productId if setting to free
             if (name === 'isPaid' && !checked) {
                 updates.price = '0';
+                updates.digistoreProductId = '';
             }
             return { ...prev, ...updates };
         });
@@ -413,7 +422,7 @@ const ManageClasses = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 flex flex-col h-[calc(100vh-3.5rem)]">
             {/* Pending Uploads Panel */}
             <PendingUploadsPanel
                 pendingUploads={pendingUploads}
@@ -432,7 +441,7 @@ const ManageClasses = () => {
             />
 
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
                 <div>
                     <h1 className="text-3xl font-display font-bold text-foreground">Manage Classes</h1>
                     <p className="text-muted-foreground mt-1">Create and manage your yoga classes</p>
@@ -441,7 +450,7 @@ const ManageClasses = () => {
                     type="button"
                     onClick={() => handleOpenModal()}
                     disabled={activeUploads.length > 0}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeUploads.length > 0
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors cursor-pointer ${activeUploads.length > 0
                         ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-60'
                         : 'bg-primary text-primary-foreground hover:bg-primary/90'
                         }`}
@@ -453,7 +462,7 @@ const ManageClasses = () => {
             </div>
 
             {/* Table */}
-            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+            <div className="bg-card rounded-xl border border-border shadow-sm flex flex-col overflow-hidden flex-grow">
                 <div className="p-4 border-b border-border">
                     <div className="relative max-w-sm">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
@@ -462,14 +471,22 @@ const ManageClasses = () => {
                             placeholder="Search classes..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 rounded-lg bg-background border border-input focus:ring-2 focus:ring-ring focus:border-input outline-none transition-all"
+                            className="w-full pl-10 pr-10 py-2 rounded-lg bg-background border border-input focus:ring-2 focus:ring-ring focus:border-input outline-none transition-all"
                         />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className="overflow-auto flex-grow relative">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
+                        <thead className="bg-muted/95 backdrop-blur supports-[backdrop-filter]:bg-muted/50 text-muted-foreground font-medium border-b border-border sticky top-0 z-10">
                             <tr>
                                 <th className="px-6 py-4">Title</th>
                                 <th className="px-6 py-4">Instructor</th>
@@ -501,10 +518,19 @@ const ManageClasses = () => {
                                         <td className="px-6 py-4">{cls.duration} mins</td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
+                                                {cls.video && (
+                                                    <Link
+                                                        to={`/admin/classes/${cls._id}/preview`}
+                                                        className="p-2 hover:bg-primary/10 rounded-full text-muted-foreground hover:text-primary transition-colors"
+                                                        title="Preview Class"
+                                                    >
+                                                        <Play size={18} />
+                                                    </Link>
+                                                )}
                                                 <button
                                                     type="button"
                                                     onClick={() => handleOpenModal(cls)}
-                                                    className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-primary transition-colors"
+                                                    className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                                                     title="Edit"
                                                 >
                                                     <Pencil size={18} />
@@ -512,7 +538,7 @@ const ManageClasses = () => {
                                                 <button
                                                     type="button"
                                                     onClick={(e) => handleDelete(e, cls._id)}
-                                                    className="p-2 hover:bg-red-50 rounded-full text-muted-foreground hover:text-red-600 transition-colors"
+                                                    className="p-2 hover:bg-red-50 rounded-full text-muted-foreground hover:text-red-600 transition-colors cursor-pointer"
                                                     title="Delete"
                                                 >
                                                     <Trash2 size={18} />
@@ -602,6 +628,23 @@ const ManageClasses = () => {
                                         placeholder="0.00"
                                     />
                                 </div>
+
+                                {/* Digistore Product ID - only shown for paid classes */}
+                                {formData.isPaid && (
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium leading-none">Digistore24 Product ID</label>
+                                        <input
+                                            type="text"
+                                            name="digistoreProductId"
+                                            required={formData.isPaid}
+                                            value={formData.digistoreProductId}
+                                            onChange={handleChange}
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                            placeholder="e.g. 123456"
+                                        />
+                                        <p className="text-xs text-muted-foreground">Product ID from your Digistore24 dashboard</p>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
@@ -680,6 +723,15 @@ const ManageClasses = () => {
                     </div>
                 </div>
             )}
+
+            {/* Video Preview Modal */}
+            <VideoPreviewModal
+                isOpen={!!previewClass}
+                onClose={() => setPreviewClass(null)}
+                videoUrl={previewClass?.video}
+                posterUrl={previewClass?.image}
+                title={previewClass?.title}
+            />
         </div>
     );
 };

@@ -6,7 +6,7 @@ import {
     useUpdateCourseMutation,
     useDeleteCourseMutation
 } from '../../features/admin/course/courseApi';
-import { Loader2, Plus, Pencil, Trash2, X, Check, Search, BookOpen, Video } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, X, Check, Search, BookOpen, Video, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import FileUpload from '../../components/common/FileUpload';
 import { uploadToCloudinary } from '../../utils/uploadMedia';
@@ -27,6 +27,7 @@ const ManageCourses = () => {
         instructor: '',
         isPaid: false,
         price: '0',
+        digistoreProductId: '',
         duration: '', // e.g. "4 Weeks"
         sessions: '', // e.g. "8 Sessions"
         level: 'All Levels',
@@ -50,6 +51,7 @@ const ManageCourses = () => {
                 instructor: course.instructor || '',
                 isPaid: course.isPaid || (course.price > 0),
                 price: course.price || '0',
+                digistoreProductId: course.digistoreProductId || '',
                 duration: course.duration || '',
                 sessions: course.sessions || '',
                 level: course.level || 'All Levels',
@@ -64,6 +66,7 @@ const ManageCourses = () => {
                 instructor: '',
                 isPaid: false,
                 price: '0',
+                digistoreProductId: '',
                 duration: '',
                 sessions: '',
                 level: 'All Levels',
@@ -83,9 +86,10 @@ const ManageCourses = () => {
         const { name, value, type, checked } = e.target;
         setFormData(prev => {
             const updates = { [name]: type === 'checkbox' ? checked : value };
-            // Reset price if setting to free
+            // Reset price and productId if setting to free
             if (name === 'isPaid' && !checked) {
                 updates.price = '0';
+                updates.digistoreProductId = '';
             }
             return { ...prev, ...updates };
         });
@@ -159,8 +163,8 @@ const ManageCourses = () => {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-6 flex flex-col h-[calc(100vh-3.5rem)]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
                 <div>
                     <h1 className="text-3xl font-display font-bold text-foreground">Manage Courses</h1>
                     <p className="text-muted-foreground mt-1">Create and manage your courses and workshops</p>
@@ -168,14 +172,14 @@ const ManageCourses = () => {
                 <button
                     type="button"
                     onClick={() => handleOpenModal()}
-                    className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+                    className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
                 >
                     <Plus size={20} />
                     Add Course
                 </button>
             </div>
 
-            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+            <div className="bg-card rounded-xl border border-border shadow-sm flex flex-col overflow-hidden flex-grow">
                 <div className="p-4 border-b border-border">
                     <div className="relative max-w-sm">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
@@ -184,14 +188,22 @@ const ManageCourses = () => {
                             placeholder="Search courses..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 rounded-lg bg-background border border-input focus:ring-2 focus:ring-ring focus:border-input outline-none transition-all"
+                            className="w-full pl-10 pr-10 py-2 rounded-lg bg-background border border-input focus:ring-2 focus:ring-ring focus:border-input outline-none transition-all"
                         />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className="overflow-auto flex-grow relative">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
+                        <thead className="bg-muted/95 backdrop-blur supports-[backdrop-filter]:bg-muted/50 text-muted-foreground font-medium border-b border-border sticky top-0 z-10">
                             <tr>
                                 <th className="px-6 py-4">Title</th>
                                 <th className="px-6 py-4">Instructor</th>
@@ -244,10 +256,17 @@ const ManageCourses = () => {
                                                     <Video size={14} />
                                                     Sessions
                                                 </Link>
+                                                <Link
+                                                    to={`/admin/courses/${course._id}/preview`}
+                                                    className="p-2 hover:bg-primary/10 rounded-full text-muted-foreground hover:text-primary transition-colors"
+                                                    title="Preview Course"
+                                                >
+                                                    <Play size={18} />
+                                                </Link>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleOpenModal(course)}
-                                                    className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-primary transition-colors"
+                                                    className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                                                     title="Edit"
                                                 >
                                                     <Pencil size={18} />
@@ -255,7 +274,7 @@ const ManageCourses = () => {
                                                 <button
                                                     type="button"
                                                     onClick={(e) => handleDelete(e, course._id)}
-                                                    className="p-2 hover:bg-red-50 rounded-full text-muted-foreground hover:text-red-600 transition-colors"
+                                                    className="p-2 hover:bg-red-50 rounded-full text-muted-foreground hover:text-red-600 transition-colors cursor-pointer"
                                                     title="Delete"
                                                 >
                                                     <Trash2 size={18} />
@@ -383,6 +402,23 @@ const ManageCourses = () => {
                                     placeholder="0.00"
                                 />
                             </div>
+
+                            {/* Digistore Product ID - only shown for paid courses */}
+                            {formData.isPaid && (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium leading-none">Digistore24 Product ID</label>
+                                    <input
+                                        type="text"
+                                        name="digistoreProductId"
+                                        required={formData.isPaid}
+                                        value={formData.digistoreProductId}
+                                        onChange={handleChange}
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        placeholder="e.g. 123456"
+                                    />
+                                    <p className="text-xs text-muted-foreground">Product ID from your Digistore24 dashboard</p>
+                                </div>
+                            )}
 
                             <div>
                                 <FileUpload

@@ -25,6 +25,11 @@ const courseSchema = new mongoose.Schema({
         required: function () { return this.isPaid; },
         default: 0
     },
+    digistoreProductId: {
+        type: String,
+        required: function () { return this.isPaid; }, // Required for paid courses
+        trim: true
+    },
     duration: {
         type: String, // e.g. "4 Weeks"
         required: [true, 'Please add a duration']

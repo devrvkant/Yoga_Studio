@@ -12,6 +12,7 @@ import { Loader2, Plus, Pencil, Trash2, X, Check, Search, ArrowLeft, GripVertica
 import { toast } from 'sonner';
 import FileUpload from '../../components/common/FileUpload';
 import { UploadOverlay, PendingUploadsPanel } from '../../components/upload';
+import { VideoPreviewModal } from '../../components/video';
 import {
     createUploadSession,
     startUpload,
@@ -52,6 +53,8 @@ const ManageSessions = () => {
     const [activeUploads, setActiveUploads] = useState([]);
     // Pending uploads from previous session
     const [pendingUploads, setPendingUploads] = useState([]);
+    // Video preview state
+    const [previewSession, setPreviewSession] = useState(null);
 
     // Get current course info
     const courses = coursesData?.data || coursesData || [];
@@ -502,11 +505,7 @@ const ManageSessions = () => {
                                         <p className="text-sm text-muted-foreground">{session.duration}</p>
                                     )}
                                 </div>
-                                {session.video && (
-                                    <div className="w-10 h-10 rounded bg-muted flex items-center justify-center text-muted-foreground">
-                                        <Play size={16} />
-                                    </div>
-                                )}
+
                                 <div className="flex items-center gap-2">
                                     <button
                                         type="button"
@@ -622,6 +621,15 @@ const ManageSessions = () => {
                     </div>
                 </div>
             )}
+
+            {/* Video Preview Modal */}
+            <VideoPreviewModal
+                isOpen={!!previewSession}
+                onClose={() => setPreviewSession(null)}
+                videoUrl={previewSession?.video}
+                posterUrl={previewSession?.thumbnail}
+                title={previewSession?.title}
+            />
         </div>
     );
 };

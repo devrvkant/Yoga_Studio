@@ -9,6 +9,10 @@ export const classApi = createApi({
             query: () => '/api/classes',
             providesTags: ['Class'],
         }),
+        getClass: builder.query({
+            query: (id) => `/api/classes/${id}`,
+            providesTags: (result, error, id) => [{ type: 'Class', id }],
+        }),
         addClass: builder.mutation({
             query: (classData) => ({
                 url: '/api/classes',
@@ -94,6 +98,7 @@ export const classApi = createApi({
 
 export const {
     useGetClassesQuery,
+    useGetClassQuery,
     useAddClassMutation,
     useUpdateClassMutation,
     useDeleteClassMutation,

@@ -21,6 +21,11 @@ const classSchema = new mongoose.Schema({
         required: function () { return this.isPaid; }, // Only required if paid
         default: 0
     },
+    digistoreProductId: {
+        type: String,
+        required: function () { return this.isPaid; }, // Required for paid classes
+        trim: true
+    },
     level: {
         type: String,
         required: [true, 'Please add a difficulty level'],

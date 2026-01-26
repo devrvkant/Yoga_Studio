@@ -4,9 +4,27 @@ import { Loader2, Mail, Book, Calendar, ChevronLeft, ChevronRight, Filter, Info 
 import { format } from 'date-fns';
 
 const Enrollments = () => {
+    const [hoveredItem, setHoveredItem] = useState(null);
+
+    const handleMouseEnter = (e, items, type) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setHoveredItem({
+            type,
+            items,
+            position: {
+                left: rect.left + rect.width / 2,
+                top: rect.top
+            }
+        });
+    };
+
+    const handleMouseLeave = () => {
+        setHoveredItem(null);
+    };
+
     const [page, setPage] = useState(1);
     const [filterStatus, setFilterStatus] = useState('all');
-    const limit = 15; // Users per page, or we can use 11/12 with normal height
+    const limit = 13; // 13 users to fill the viewport
 
     const queryParams = {
         page,
@@ -42,8 +60,36 @@ const Enrollments = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="space-y-4 flex flex-col h-[calc(100vh-3.5rem)] relative">
+            {/* Tooltip Portal/Overlay */}
+            {hoveredItem && (
+                <div
+                    className="fixed z-[100] w-64 bg-white text-slate-700 text-xs rounded-xl shadow-xl ring-1 ring-slate-200 p-2 animate-in fade-in zoom-in-95 duration-200 pointer-events-none"
+                    style={{
+                        left: hoveredItem.position.left,
+                        top: hoveredItem.position.top - 8, // slight offset
+                        transform: 'translate(-50%, -100%)'
+                    }}
+                >
+                    <div className="flex flex-col gap-1.5 p-1 max-h-48 overflow-y-auto custom-scrollbar">
+                        {hoveredItem.items.map(item => (
+                            <div key={item._id} className="flex items-center gap-2 border-b border-slate-100 last:border-0 pb-1.5 last:pb-0 text-left">
+                                {hoveredItem.type === 'class' ? (
+                                    <Calendar size={12} className="text-primary shrink-0" />
+                                ) : (
+                                    <Book size={12} className="text-primary shrink-0" />
+                                )}
+                                <span className="truncate font-medium text-slate-800">{item.title}</span>
+                            </div>
+                        ))}
+                    </div>
+                    {/* Arrow */}
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-white drop-shadow-sm"></div>
+                </div>
+            )}
+
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 shrink-0">
+                {/* ... header content ... */}
                 <div>
                     <h1 className="text-2xl font-display font-bold text-foreground">User Enrollments</h1>
                     <p className="text-muted-foreground text-sm mt-1">
@@ -71,16 +117,16 @@ const Enrollments = () => {
                 </div>
             </div>
 
-            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
+            <div className="bg-card rounded-xl border border-border shadow-sm flex flex-col overflow-hidden flex-grow">
+                <div className="overflow-auto flex-grow relative">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
+                        <thead className="bg-muted/95 backdrop-blur supports-[backdrop-filter]:bg-muted/50 text-muted-foreground font-medium border-b border-border sticky top-0 z-10">
                             <tr>
-                                <th className="px-6 py-3 bg-muted/50 w-[30%]">User</th>
-                                <th className="px-6 py-3 text-center bg-muted/50 w-[15%]">Status</th>
-                                <th className="px-6 py-3 text-center bg-muted/50 w-[20%]">Booked Classes</th>
-                                <th className="px-6 py-3 text-center bg-muted/50 w-[20%]">Enrolled Courses</th>
-                                <th className="px-6 py-3 text-center bg-muted/50 w-[15%]">Joined Date</th>
+                                <th className="px-6 py-2.5 w-[30%]">User</th>
+                                <th className="px-6 py-2.5 text-center w-[15%]">Status</th>
+                                <th className="px-6 py-2.5 text-center w-[20%]">Booked Classes</th>
+                                <th className="px-6 py-2.5 text-center w-[20%]">Enrolled Courses</th>
+                                <th className="px-6 py-2.5 text-center w-[15%]">Joined Date</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/50">
@@ -105,7 +151,7 @@ const Enrollments = () => {
 
                                     return (
                                         <tr key={user._id} className="hover:bg-muted/20 transition-colors group/row">
-                                            <td className="px-6 py-3 align-middle">
+                                            <td className="px-6 py-2 align-middle">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0 text-sm">
                                                         {user.name.charAt(0).toUpperCase()}
@@ -118,7 +164,7 @@ const Enrollments = () => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-3 text-center align-middle">
+                                            <td className="px-6 py-2 text-center align-middle">
                                                 {isPremium ? (
                                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200/50">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
@@ -134,23 +180,15 @@ const Enrollments = () => {
                                                     </span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-3 text-center align-middle">
+                                            <td className="px-6 py-2 text-center align-middle">
                                                 {user.enrolledClasses?.length > 1 ? (
-                                                    <div className="flex items-center justify-center gap-1.5 group relative cursor-help">
+                                                    <div
+                                                        className="flex items-center justify-center gap-1.5 cursor-help w-full"
+                                                        onMouseEnter={(e) => handleMouseEnter(e, user.enrolledClasses, 'class')}
+                                                        onMouseLeave={handleMouseLeave}
+                                                    >
                                                         <span className="text-sm font-medium text-foreground">{user.enrolledClasses.length} Classes</span>
                                                         <Info size={14} className="text-muted-foreground/50" />
-                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2 bg-background dark:bg-slate-900 text-foreground text-xs rounded-lg shadow-xl ring-1 ring-border z-50 hidden group-hover:block animate-in fade-in zoom-in-95 duration-200">
-                                                            <div className="flex flex-col gap-1.5 p-1 max-h-48 overflow-y-auto">
-                                                                {user.enrolledClasses.map(cls => (
-                                                                    <div key={cls._id} className="flex items-center gap-2 border-b last:border-0 border-border/50 pb-1 last:pb-0 text-left">
-                                                                        <Calendar size={12} className="text-primary shrink-0" />
-                                                                        <span className="truncate font-medium">{cls.title}</span>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                            {/* Arrow */}
-                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-background dark:border-t-slate-900 drop-shadow-sm"></div>
-                                                        </div>
                                                     </div>
                                                 ) : user.enrolledClasses?.length === 1 ? (
                                                     <div className="flex justify-center">
@@ -163,23 +201,15 @@ const Enrollments = () => {
                                                     <span className="text-muted-foreground/30 text-xs font-medium">-</span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-3 text-center align-middle">
+                                            <td className="px-6 py-2 text-center align-middle">
                                                 {user.enrolledCourses?.length > 1 ? (
-                                                    <div className="flex items-center justify-center gap-1.5 group relative cursor-help">
+                                                    <div
+                                                        className="flex items-center justify-center gap-1.5 cursor-help w-full"
+                                                        onMouseEnter={(e) => handleMouseEnter(e, user.enrolledCourses, 'course')}
+                                                        onMouseLeave={handleMouseLeave}
+                                                    >
                                                         <span className="text-sm font-medium text-foreground">{user.enrolledCourses.length} Courses</span>
                                                         <Info size={14} className="text-muted-foreground/50" />
-                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2 bg-background dark:bg-slate-900 text-foreground text-xs rounded-lg shadow-xl ring-1 ring-border z-50 hidden group-hover:block animate-in fade-in zoom-in-95 duration-200">
-                                                            <div className="flex flex-col gap-1.5 p-1 max-h-48 overflow-y-auto">
-                                                                {user.enrolledCourses.map(course => (
-                                                                    <div key={course._id} className="flex items-center gap-2 border-b last:border-0 border-border/50 pb-1 last:pb-0 text-left">
-                                                                        <Book size={12} className="text-primary shrink-0" />
-                                                                        <span className="truncate font-medium">{course.title}</span>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                            {/* Arrow */}
-                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-background dark:border-t-slate-900 drop-shadow-sm"></div>
-                                                        </div>
                                                     </div>
                                                 ) : user.enrolledCourses?.length === 1 ? (
                                                     <div className="flex justify-center">
@@ -192,7 +222,7 @@ const Enrollments = () => {
                                                     <span className="text-muted-foreground/30 text-xs font-medium">-</span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-3 text-center text-muted-foreground text-sm align-middle">
+                                            <td className="px-6 py-2 text-center text-muted-foreground text-sm align-middle">
                                                 {format(new Date(user.createdAt), 'MMM d, yyyy')}
                                             </td>
                                         </tr>
@@ -205,7 +235,7 @@ const Enrollments = () => {
 
                 {/* Pagination UI - Only show if more than one page */}
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/20">
+                    <div className="flex items-center justify-between px-6 py-2.5 border-t border-border bg-muted/20">
                         <div className="text-sm text-muted-foreground">
                             Page {page} of {totalPages} • Showing {users.length} of {totalUsers} users
                         </div>
@@ -213,7 +243,7 @@ const Enrollments = () => {
                             <button
                                 onClick={handlePrevPage}
                                 disabled={page === 1}
-                                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg border border-input bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg border border-input bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                             >
                                 <ChevronLeft size={16} />
                                 Previous
@@ -221,7 +251,7 @@ const Enrollments = () => {
                             <button
                                 onClick={handleNextPage}
                                 disabled={page >= totalPages}
-                                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg border border-input bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg border border-input bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                             >
                                 Next
                                 <ChevronRight size={16} />
