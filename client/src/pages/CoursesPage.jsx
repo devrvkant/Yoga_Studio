@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check, User, Users, BookOpen, Heart, Calendar, Phone, Bot, Signal } from 'lucide-react'
 import { Button } from '../components/ui/Button'
+import { cn } from '../lib/utils'
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useGetCoursesQuery, useEnrollCourseMutation } from '../features/admin/course/courseApi';
@@ -34,13 +35,8 @@ export function CoursesPage() {
         }
 
         if (course.isPaid) {
-            toast("Premium Content", {
-                description: "Enrollment for paid courses is coming soon!",
-                action: {
-                    label: "Contact Us",
-                    onClick: () => navigate('/contact')
-                }
-            });
+            // Redirect to checkout page for paid courses
+            navigate(`/checkout?type=course&id=${course._id}`);
             return;
         }
 
@@ -92,13 +88,14 @@ export function CoursesPage() {
                         alt="Yoga Courses"
                         className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-primary/90" />
+                    {/* Minimal dark overlay for text contrast */}
+                    <div className="absolute inset-0 bg-black/30" />
                 </div>
 
                 <div className="relative z-10 max-w-4xl mx-auto text-white">
-                    <span className="text-white/80 text-sm md:text-base font-medium uppercase tracking-widest mb-4 block">Home / Courses</span>
-                    <h1 className="text-5xl md:text-7xl font-display font-bold mb-6">Yoga Courses</h1>
-                    <p className="text-white/90 text-lg md:text-xl font-light max-w-2xl mx-auto">
+                    <span className="text-white/90 text-sm md:text-base font-medium uppercase tracking-widest mb-4 block drop-shadow-md">Home / Courses</span>
+                    <h1 className="text-5xl md:text-7xl font-display font-bold mb-6 drop-shadow-lg">Yoga Courses</h1>
+                    <p className="text-white/95 text-lg md:text-xl font-medium max-w-2xl mx-auto drop-shadow-md">
                         Structured learning programs designed to deepen your practice and understanding of yoga
                     </p>
                 </div>
@@ -109,10 +106,12 @@ export function CoursesPage() {
                         <button
                             key={filter}
                             onClick={() => setActiveFilter(filter)}
-                            className={`px-6 py-2 rounded-full border transition-all duration-300 font-medium text-sm md:text-base ${activeFilter === filter
-                                ? 'bg-white text-primary border-white'
-                                : 'bg-transparent text-white border-white/50 hover:bg-white/10'
-                                }`}
+                            className={cn(
+                                "px-6 py-2 rounded-full transition-all duration-300 font-medium text-sm md:text-base backdrop-blur-sm shadow-sm border",
+                                activeFilter === filter
+                                    ? 'bg-white text-primary border-white'
+                                    : 'bg-white/10 text-white border-white/30 hover:bg-white/20 hover:border-white'
+                            )}
                         >
                             {filter}
                         </button>

@@ -16,15 +16,16 @@ export function Hero() {
           alt="Peaceful Yoga Studio"
           className="w-full h-full object-cover"
         />
-        {/* No overlay - bright image as in design */}
+        {/* Overlay for text readability (Navbar) */}
+        <div className="absolute inset-0 bg-black/30" />
       </div>
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-5xl mx-auto px-6 flex flex-col items-center text-center pt-20">
-        <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-medium text-foreground leading-[1.1] mb-4 italic">
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-medium text-white leading-[1.1] mb-4 italic drop-shadow-md">
           Find Your Inner Peace
         </h1>
-        <p className="text-xl md:text-2xl text-foreground mb-10 font-medium drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">
+        <p className="text-xl md:text-2xl text-white/90 mb-10 font-medium drop-shadow-md">
           Begin Your Yoga Journey Today
         </p>
 
@@ -54,7 +55,7 @@ export function Hero() {
             <Button
               variant="outline"
               size="lg"
-              className="rounded-full text-base px-8 h-12 border-2 border-primary text-primary hover:bg-primary hover:text-white bg-transparent transition-all duration-300"
+              className="rounded-full text-base px-8 h-12 border-2 border-white text-white hover:bg-white hover:text-primary bg-transparent transition-all duration-300"
             >
               Learn More
             </Button>

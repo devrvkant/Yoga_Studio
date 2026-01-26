@@ -36,15 +36,16 @@ export function About() {
             <section className="relative w-full h-[60vh] min-h-[500px] flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 z-0">
                     <img
-                        src={aboutHeroImg}
+                        src="https://images.unsplash.com/photo-1545389336-cf090694435e?q=80&w=2000&auto=format&fit=crop"
                         alt="Meditation"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-[center_45%]"
                     />
+                    {/* Minimal dark overlay for text contrast */}
                     <div className="absolute inset-0 bg-black/30" />
                 </div>
                 <div className="relative z-10 text-center text-white px-6 pt-20">
-                    <span className="text-white/90 text-sm md:text-base font-medium uppercase tracking-widest mb-4 block">Home / About Us</span>
-                    <h1 className="text-5xl md:text-7xl font-display font-bold mb-6">Our Story</h1>
+                    <span className="text-white/90 text-sm md:text-base font-medium uppercase tracking-widest mb-4 block drop-shadow-md">Home / About Us</span>
+                    <h1 className="text-5xl md:text-7xl font-display font-bold mb-6 drop-shadow-lg">Our Story</h1>
                 </div>
             </section>
 
