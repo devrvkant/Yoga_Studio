@@ -10,12 +10,13 @@ import {
 
 // Middleware
 import { protect, authorize } from '../middleware/authMiddleware.js';
+import { optionalAuth } from '../middleware/optionalAuth.js';
 
 const router = express.Router({ mergeParams: true }); // mergeParams to access :courseId from parent
 
-// Public routes
-router.get('/', getSessionsByCourse);
-router.get('/:id', getSession);
+// Public routes (optionalAuth to check enrollment for paid courses)
+router.get('/', optionalAuth, getSessionsByCourse);
+router.get('/:id', optionalAuth, getSession);
 
 // Admin only routes
 router.post('/', protect, authorize('admin'), createSession);

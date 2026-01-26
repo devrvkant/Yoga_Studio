@@ -37,6 +37,11 @@ const env = {
     CLOUD_NAME: process.env.CLOUD_NAME,
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
     CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+
+    // Payment (Digistore24)
+    DIGISTORE_VENDOR_ID: process.env.DIGISTORE_VENDOR_ID,
+    DIGISTORE_IPN_PASSPHRASE: process.env.DIGISTORE_IPN_PASSPHRASE,
+    FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
 };
 
 // Validate required Cloudinary credentials
@@ -49,4 +54,15 @@ if (!env.CLOUD_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {
     console.log('✓ Cloudinary credentials loaded successfully');
 }
 
+// Validate payment configuration
+if (!env.DIGISTORE_VENDOR_ID || !env.DIGISTORE_IPN_PASSPHRASE) {
+    console.warn('⚠️  WARNING: Digistore24 payment not fully configured!');
+    console.warn('   DIGISTORE_VENDOR_ID:', env.DIGISTORE_VENDOR_ID ? '✓ Set' : '✗ Missing');
+    console.warn('   DIGISTORE_IPN_PASSPHRASE:', env.DIGISTORE_IPN_PASSPHRASE ? '✓ Set' : '✗ Missing');
+    console.warn('   Paid content purchases will NOT work without these.');
+} else {
+    console.log('✓ Digistore24 payment configured');
+}
+
 export default env;
+

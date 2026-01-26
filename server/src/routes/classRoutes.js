@@ -11,12 +11,13 @@ import {
 
 // Middleware
 import { protect, authorize } from '../middleware/authMiddleware.js';
+import { optionalAuth } from '../middleware/optionalAuth.js';
 
 const router = express.Router();
 
 // Public routes
 router.get('/', getClasses);
-router.get('/:id', getClass);
+router.get('/:id', optionalAuth, getClass); // optionalAuth to check enrollment for paid classes
 
 // Enrollment
 router.post('/:id/enroll', protect, enrollClass);

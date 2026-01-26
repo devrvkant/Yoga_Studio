@@ -15,13 +15,28 @@ export const getClasses = async (req, res, next) => {
 
 // @desc    Get single class
 // @route   GET /api/classes/:id
-// @access  Public
+// @access  Public (but video hidden for paid classes if not enrolled)
 export const getClass = async (req, res, next) => {
     try {
         const yogaClass = await Class.findById(req.params.id);
 
         if (!yogaClass) {
             return res.status(404).json({ success: false, message: 'Class not found' });
+        }
+
+        // Security: Hide video URL for paid classes if user is not enrolled
+        if (yogaClass.isPaid) {
+            const isEnrolled = req.user && yogaClass.enrolledUsers.some(
+                userId => userId.toString() === req.user.id
+            );
+            const isAdmin = req.user && req.user.role === 'admin';
+
+            if (!isEnrolled && !isAdmin) {
+                // Convert to object to modify, then remove video
+                const classData = yogaClass.toObject();
+                delete classData.video;
+                return res.status(200).json({ success: true, data: classData });
+            }
         }
 
         res.status(200).json({ success: true, data: yogaClass });

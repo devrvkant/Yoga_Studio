@@ -5,7 +5,7 @@ import { rollbackUploads, extractPublicId, deleteFromCloudinary } from '../servi
 /**
  * @desc    Get all sessions for a course
  * @route   GET /api/courses/:courseId/sessions
- * @access  Public
+ * @access  Public (but video hidden for paid courses if not enrolled)
  */
 export const getSessionsByCourse = async (req, res) => {
     try {
@@ -17,7 +17,25 @@ export const getSessionsByCourse = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Course not found' });
         }
 
-        const sessions = await Session.find({ courseId }).sort({ order: 1 });
+        let sessions = await Session.find({ courseId }).sort({ order: 1 });
+
+        // Security: Hide video URLs for paid courses if user is not enrolled
+        if (course.isPaid) {
+            const isEnrolled = req.user && course.enrolledUsers.some(
+                userId => userId.toString() === req.user.id
+            );
+            const isAdmin = req.user && req.user.role === 'admin';
+
+            if (!isEnrolled && !isAdmin) {
+                // Strip video from each session
+                sessions = sessions.map(session => {
+                    const sessionObj = session.toObject();
+                    delete sessionObj.video;
+                    return sessionObj;
+                });
+            }
+        }
+
         res.status(200).json({ success: true, count: sessions.length, data: sessions });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -27,7 +45,7 @@ export const getSessionsByCourse = async (req, res) => {
 /**
  * @desc    Get single session
  * @route   GET /api/courses/:courseId/sessions/:id
- * @access  Public
+ * @access  Public (but video hidden for paid courses if not enrolled)
  */
 export const getSession = async (req, res) => {
     try {
@@ -35,6 +53,23 @@ export const getSession = async (req, res) => {
 
         if (!session) {
             return res.status(404).json({ success: false, message: 'Session not found' });
+        }
+
+        // Get parent course to check if paid
+        const course = await Course.findById(session.courseId);
+
+        // Security: Hide video URL for paid courses if user is not enrolled
+        if (course && course.isPaid) {
+            const isEnrolled = req.user && course.enrolledUsers.some(
+                userId => userId.toString() === req.user.id
+            );
+            const isAdmin = req.user && req.user.role === 'admin';
+
+            if (!isEnrolled && !isAdmin) {
+                const sessionData = session.toObject();
+                delete sessionData.video;
+                return res.status(200).json({ success: true, data: sessionData });
+            }
         }
 
         res.status(200).json({ success: true, data: session });
