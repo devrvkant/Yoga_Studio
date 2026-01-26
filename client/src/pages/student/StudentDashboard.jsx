@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useGetMeQuery } from '../../features/auth/authApi';
-import { BookOpen, Calendar, Clock, User, PlayCircle } from 'lucide-react';
+import { BookOpen, Calendar, ArrowRight, PlayCircle, Clock } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
 export function StudentDashboard() {
@@ -11,136 +11,109 @@ export function StudentDashboard() {
     const enrolledCourses = user?.enrolledCourses || [];
     const enrolledClasses = user?.enrolledClasses || [];
 
+    // Combine recent activity logic (e.g., take the first item from either list)
+    // For simplicity, let's just show one "Resume Learning" card if available
+    const recentCourse = enrolledCourses.length > 0 ? enrolledCourses[0] : null;
+    const upcomingClass = enrolledClasses.length > 0 ? enrolledClasses[0] : null;
+
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center h-screen">
+            <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         );
     }
 
     return (
-        <div className="w-full bg-background min-h-screen py-12 px-6">
-            <div className="container mx-auto max-w-7xl">
-                <header className="mb-12">
-                    <h1 className="text-4xl font-display font-bold text-foreground mb-2">My Learning Dashboard</h1>
-                    <p className="text-muted text-lg font-light">Welcome back, {user?.name}</p>
-                </header>
+        <div className="space-y-8">
+            <header className="mb-8">
+                <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">My Learning Dashboard</h1>
+                <p className="text-muted text-lg font-light">Welcome back, {user?.name}</p>
+            </header>
 
-                {/* Enrolled Courses Section */}
-                <section className="mb-16">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
-                            <BookOpen className="text-primary" size={24} />
-                            My Courses
-                        </h2>
-                        {enrolledCourses.length > 0 && (
-                            <Button variant="ghost" onClick={() => navigate('/courses')} className="text-primary hover:text-primary-dark">
-                                Browse More
+            {/* Recent Activity Section */}
+            <section>
+                <h2 className="text-xl font-display font-bold text-foreground mb-4 flex items-center gap-2">
+                    <Clock className="text-primary" size={20} />
+                    Recent Activity
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Recent Course Card */}
+                    {recentCourse ? (
+                        <div className="bg-white p-6 rounded-lg border border-border-soft shadow-sm flex flex-col">
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                    <BookOpen size={24} />
+                                </div>
+                                <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-full">Course</span>
+                            </div>
+                            <h3 className="text-lg font-bold text-foreground mb-1">{recentCourse.title}</h3>
+                            <p className="text-sm text-muted mb-4 line-clamp-2">Continue where you left off in your journey.</p>
+                            <Button className="mt-auto w-full" onClick={() => navigate(`/courses/${recentCourse._id}`)}>
+                                <PlayCircle className="mr-2" size={16} /> Resume Course
                             </Button>
-                        )}
-                    </div>
-
-                    {enrolledCourses.length === 0 ? (
-                        <div className="bg-white rounded-xl p-8 text-center border border-border-soft shadow-sm">
-                            <h3 className="text-lg font-medium text-foreground mb-2">You haven't enrolled in any courses yet</h3>
-                            <p className="text-muted mb-6">Start your structured learning journey today.</p>
-                            <Button onClick={() => navigate('/courses')}>Explore Courses</Button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {enrolledCourses.map((course) => (
-                                <div key={course._id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-border-soft flex flex-col">
-                                    <div className="relative h-48 overflow-hidden">
-                                        <img
-                                            src={course.image}
-                                            alt={course.title}
-                                            className="w-full h-full object-cover"
-                                        />
-                                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                            <Button variant="secondary" className="gap-2" onClick={() => navigate(`/courses/${course._id}`)}>
-                                                <PlayCircle size={16} /> Resume
-                                            </Button>
-                                        </div>
-                                    </div>
-                                    <div className="p-6 flex flex-col flex-grow">
-                                        <h3 className="text-xl font-display font-bold text-foreground mb-2">{course.title}</h3>
-                                        <div className="flex items-center gap-4 text-xs font-medium text-muted mb-4">
-                                            <div className="flex items-center gap-1">
-                                                <Calendar size={14} /> {course.duration}
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <User size={14} /> {course.instructor || 'Instructor'}
-                                            </div>
-                                        </div>
-                                        <Button className="w-full mt-auto" variant="outline" onClick={() => navigate(`/courses/${course._id}`)}>
-                                            View Course
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
+                        <div className="bg-slate-50 p-6 rounded-lg border border-dashed border-border-soft flex flex-col items-center justify-center text-center">
+                            <p className="text-muted mb-4">No recent courses.</p>
+                            <Button variant="outline" size="sm" onClick={() => navigate('/courses')}>Browse Courses</Button>
                         </div>
                     )}
-                </section>
 
-                {/* Enrolled Classes Section */}
-                <section>
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
-                            <Calendar className="text-primary" size={24} />
-                            My Scheduled Classes
-                        </h2>
-                        {enrolledClasses.length > 0 && (
-                            <Button variant="ghost" onClick={() => navigate('/classes')} className="text-primary hover:text-primary-dark">
-                                Browse More
+                    {/* Upcoming Class Card */}
+                    {upcomingClass ? (
+                        <div className="bg-white p-6 rounded-lg border border-border-soft shadow-sm flex flex-col">
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="p-2 bg-green-50 text-green-600 rounded-lg">
+                                    <Calendar size={24} />
+                                </div>
+                                <span className="text-xs font-medium bg-green-50 text-green-700 px-2 py-1 rounded-full">Class</span>
+                            </div>
+                            <h3 className="text-lg font-bold text-foreground mb-1">{upcomingClass.title}</h3>
+                            <p className="text-sm text-muted mb-4">Your next scheduled session.</p>
+                            <Button className="mt-auto w-full" variant="secondary" onClick={() => navigate(`/dashboard/my-classes`)}>
+                                View Details
                             </Button>
-                        )}
-                    </div>
-
-                    {enrolledClasses.length === 0 ? (
-                        <div className="bg-white rounded-xl p-8 text-center border border-border-soft shadow-sm">
-                            <h3 className="text-lg font-medium text-foreground mb-2">No upcoming classes booked</h3>
-                            <p className="text-muted mb-6">Join a session to keep up with your practice.</p>
-                            <Button onClick={() => navigate('/classes')}>Find a Class</Button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {enrolledClasses.map((cls) => (
-                                <div key={cls._id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-border-soft flex flex-col">
-                                    <div className="relative h-48 overflow-hidden">
-                                        <img
-                                            src={cls.image}
-                                            alt={cls.title}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </div>
-                                    <div className="p-6 flex flex-col flex-grow">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <h3 className="text-xl font-display font-bold text-foreground">{cls.title}</h3>
-                                            <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-full uppercase">
-                                                {cls.level}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex items-center gap-4 text-xs font-medium text-muted mb-4">
-                                            <div className="flex items-center gap-1">
-                                                <Clock size={14} /> {cls.duration}
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <User size={14} /> {cls.instructor || 'Instructor'}
-                                            </div>
-                                        </div>
-
-                                        <Button className="w-full mt-auto" onClick={() => navigate('/classes')}>
-                                            View Details
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
+                        <div className="bg-slate-50 p-6 rounded-lg border border-dashed border-border-soft flex flex-col items-center justify-center text-center">
+                            <p className="text-muted mb-4">No upcoming classes.</p>
+                            <Button variant="outline" size="sm" onClick={() => navigate('/classes')}>Find a Class</Button>
                         </div>
                     )}
-                </section>
-            </div>
+                </div>
+            </section>
+
+            {/* Browse Section */}
+            <section className="mt-12">
+                <h2 className="text-xl font-display font-bold text-foreground mb-4">Explore More</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div
+                        onClick={() => navigate('/courses')}
+                        className="group cursor-pointer bg-gradient-to-br from-primary/5 to-primary/10 hover:from-primary/10 hover:to-primary/20 p-8 rounded-xl border border-primary/10 transition-all duration-300"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <BookOpen className="text-primary h-8 w-8" />
+                            <ArrowRight className="text-primary opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1" />
+                        </div>
+                        <h3 className="text-xl font-bold text-foreground mb-2">Browse Courses</h3>
+                        <p className="text-muted-foreground text-sm">Discover comprehensive video courses to deepen your practice at your own pace.</p>
+                    </div>
+
+                    <div
+                        onClick={() => navigate('/classes')}
+                        className="group cursor-pointer bg-gradient-to-br from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 p-8 rounded-xl border border-orange-100 transition-all duration-300"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <Calendar className="text-orange-600 h-8 w-8" />
+                            <ArrowRight className="text-orange-600 opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1" />
+                        </div>
+                        <h3 className="text-xl font-bold text-foreground mb-2">Find a Class</h3>
+                        <p className="text-muted-foreground text-sm">Join live sessions with expert instructors and connect with the community.</p>
+                    </div>
+                </div>
+            </section>
         </div>
     );
 }
