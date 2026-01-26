@@ -102,8 +102,8 @@ export const getMe = async (req, res) => {
     }
 
     const user = await User.findById(req.user.id)
-        .populate('enrolledClasses', 'title image instructor video duration level isPaid')
-        .populate('enrolledCourses', 'title image instructor price duration sessions isPaid');
+        .populate('enrolledClasses', 'title image instructor video duration level isPaid description')
+        .populate('enrolledCourses', 'title image instructor price duration sessions isPaid description level learnPoints');
 
     res.status(200).json({
         success: true,

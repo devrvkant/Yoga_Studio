@@ -13,6 +13,7 @@ import authRoutes from './routes/authRoutes.js';
 import classRoutes from './routes/classRoutes.js';
 import courseRoutes from './routes/courseRoutes.js';
 import sessionRoutes from './routes/sessionRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 
 
 // Passport config
@@ -65,6 +66,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/courses/:courseId/sessions', sessionRoutes);
+app.use('/api/payments', paymentRoutes);
 
 const PORT = env.PORT;
 

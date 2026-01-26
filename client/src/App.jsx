@@ -21,10 +21,17 @@ import ManageClasses from './pages/admin/ManageClasses';
 import ManageCourses from './pages/admin/ManageCourses';
 import ManageSessions from './pages/admin/ManageSessions';
 import { CoursePlayerPage } from './pages/CoursePlayerPage';
+import { ClassPlayerPage } from './pages/ClassPlayerPage';
 import { StudentDashboard } from './pages/student/StudentDashboard';
+import MyClasses from './pages/student/MyClasses';
+import MyCourses from './pages/student/MyCourses';
 import AdminLayout from './components/admin/AdminLayout';
+import StudentLayout from './components/layout/StudentLayout';
 import MainLayout from './components/layout/MainLayout';
 import RequireAdmin from './components/layout/RequireAdmin';
+import CheckoutPage from './pages/CheckoutPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentCancelledPage from './pages/PaymentCancelledPage';
 
 // Redux
 import { useGetMeQuery } from './features/auth/authApi';
@@ -73,11 +80,30 @@ function App() {
 
             {/* Protected User Routes */}
             <Route element={<RequireAuth />}>
-              <Route path="/dashboard" element={<StudentDashboard />} />
-              <Route path="/courses/:courseId" element={<CoursePlayerPage />} />
+              {/* Dashboard and Players moved to separate layout */}
               {/* <Route path="/profile" element={<ProfilePage />} /> */}
             </Route>
           </Route>
+
+          {/* Student Routes (Standalone Layout) */}
+          <Route element={<RequireAuth />}>
+            <Route element={<StudentLayout />}>
+              <Route path="/dashboard" element={<StudentDashboard />} />
+              <Route path="/dashboard/my-classes" element={<MyClasses />} />
+              <Route path="/dashboard/my-courses" element={<MyCourses />} />
+
+              {/* Player Routes moved to Dashboard Layout */}
+              <Route path="/dashboard/my-courses/:courseId" element={<CoursePlayerPage />} />
+              <Route path="/dashboard/my-classes/:classId" element={<ClassPlayerPage />} />
+            </Route>
+
+            {/* Checkout (Protected but standalone layout) */}
+            <Route path="/checkout" element={<CheckoutPage />} />
+          </Route>
+
+          {/* Payment Result Pages (Public - user may not be logged in after redirect) */}
+          <Route path="/payment/success" element={<PaymentSuccessPage />} />
+          <Route path="/payment/cancelled" element={<PaymentCancelledPage />} />
 
           {/* Auth Routes (Standalone Layout) */}
           <Route element={<PublicOnly />}>
@@ -93,6 +119,8 @@ function App() {
               <Route path="classes" element={<ManageClasses />} />
               <Route path="courses" element={<ManageCourses />} />
               <Route path="courses/:courseId/sessions" element={<ManageSessions />} />
+              <Route path="classes/:classId/preview" element={<ClassPlayerPage backLink="/admin/classes" backText="Back to Classes" />} />
+              <Route path="courses/:courseId/preview" element={<CoursePlayerPage backLink="/admin/courses" backText="Back to Courses" />} />
             </Route>
           </Route>
         </Routes>
