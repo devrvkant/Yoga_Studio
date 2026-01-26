@@ -164,13 +164,7 @@ export function ContactPage() {
                 </div>
             </section>
 
-            {/* Floating Chat Button */}
-            <div className="fixed bottom-6 right-6 z-50">
-                <button className="flex items-center gap-2 bg-[#3d4f5f] text-white pl-4 pr-5 py-3 rounded-full shadow-lg hover:shadow-xl hover:bg-[#4a5f6f] hover:-translate-y-0.5 transition-all duration-300 border-0 cursor-pointer">
-                    <Bot size={18} />
-                    <span className="text-sm font-medium">Talk with Us</span>
-                </button>
-            </div>
+
         </div>
     )
 }
