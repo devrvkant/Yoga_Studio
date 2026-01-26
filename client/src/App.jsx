@@ -21,6 +21,8 @@ import ManageClasses from './pages/admin/ManageClasses';
 import ManageCourses from './pages/admin/ManageCourses';
 import ManageSessions from './pages/admin/ManageSessions';
 import { CoursePlayerPage } from './pages/CoursePlayerPage';
+import { ExploreCoursesPage } from './pages/ExploreCoursesPage';
+import { ExploreClassesPage } from './pages/ExploreClassesPage';
 import { ClassPlayerPage } from './pages/ClassPlayerPage';
 import { StudentDashboard } from './pages/student/StudentDashboard';
 import MyClasses from './pages/student/MyClasses';
@@ -123,6 +125,10 @@ function App() {
               <Route path="courses/:courseId/preview" element={<CoursePlayerPage backLink="/admin/courses" backText="Back to Courses" />} />
             </Route>
           </Route>
+
+          {/* Standalone Explore Pages (No Header/Footer) */}
+          <Route path="/courses/explore" element={<ExploreCoursesPage />} />
+          <Route path="/classes/explore" element={<ExploreClassesPage />} />
         </Routes>
       </div>
     </Router>
