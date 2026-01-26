@@ -1,27 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Check, User, Users, BookOpen, Heart, Calendar, Phone, Bot, Signal } from 'lucide-react'
+import { Check, User, Users, BookOpen, Heart, Calendar, Phone, Signal, ArrowRight } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { cn } from '../lib/utils'
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useGetCoursesQuery, useEnrollCourseMutation } from '../features/admin/course/courseApi';
 import { useGetMeQuery } from '../features/auth/authApi';
 import EmptyState from '../components/common/EmptyState';
-import Pagination from '../components/common/Pagination';
 
 export function CoursesPage() {
-    const [searchParams, setSearchParams] = useSearchParams();
     const [activeFilter, setActiveFilter] = useState("All Courses");
-    const [currentPage, setCurrentPage] = useState(1);
 
-    // Reset page when filter changes
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [activeFilter]);
-
+    // Fetch only 6 items for overview page
     const { data: coursesData, isLoading, isFetching } = useGetCoursesQuery({
-        page: currentPage,
-        limit: 12,
+        page: 1,
+        limit: 6,
         level: activeFilter
     });
 
@@ -30,47 +23,37 @@ export function CoursesPage() {
     const navigate = useNavigate();
 
     const courses = coursesData?.data || [];
-    const totalPages = coursesData?.pagination?.pages || Math.ceil((coursesData?.total || 0) / 12);
+    const totalCourses = coursesData?.total || 0;
     const enrolledCourseIds = userData?.data?.enrolledCourses?.map(c => c._id) || [];
     const filters = ["All Courses", "Beginner", "Intermediate", "Advanced"];
 
     const handleAction = async (course) => {
-        // 1. Guest: Redirect to Login
         if (!userData) {
             toast.error("Please login to enroll");
-            navigate('/login', { state: { from: '/courses' } }); // Better redirection handling
+            navigate('/login', { state: { from: '/courses' } });
             return;
         }
 
         const isEnrolled = enrolledCourseIds.includes(course._id);
 
-        // 2. Enrolled User: Go to Course
         if (isEnrolled) {
             navigate(`/courses/${course._id}`);
             return;
         }
 
-        // 3. New User: Paid Course -> Checkout
         if (course.isPaid) {
-            // Redirect to checkout page for paid courses
             navigate(`/checkout?type=course&id=${course._id}`);
             return;
         }
 
-        // 4. New User: Free Course -> Enroll
         const toastId = toast.loading("Enrolling...");
         try {
             await enrollCourse(course._id).unwrap();
-            await refetchUser(); // Refresh user data to update UI
+            await refetchUser();
             toast.success("Enrolled successfully!", { id: toastId });
         } catch (err) {
             toast.error(err?.data?.message || "Enrollment failed", { id: toastId });
         }
-    };
-
-    const handlePageChange = (newPage) => {
-        setCurrentPage(newPage);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const features = [
@@ -107,7 +90,6 @@ export function CoursesPage() {
                         alt="Yoga Courses"
                         className="w-full h-full object-cover"
                     />
-                    {/* Minimal dark overlay for text contrast */}
                     <div className="absolute inset-0 bg-black/30" />
                 </div>
 
@@ -137,7 +119,7 @@ export function CoursesPage() {
                 </div>
             </section>
 
-            {/* Courses Grid */}
+            {/* Courses Grid - Max 6 items */}
             <section className="py-24 bg-background">
                 <div className="container mx-auto px-6 max-w-7xl">
                     {isLoading || isFetching ? (
@@ -227,19 +209,28 @@ export function CoursesPage() {
                                 })}
                             </div>
 
-                            {/* Pagination */}
-                            <Pagination
-                                currentPage={currentPage}
-                                totalPages={coursesData?.pagination?.pages || Math.ceil((coursesData?.total || 0) / 12)}
-                                onPageChange={handlePageChange}
-                            />
+                            {/* Explore More Button */}
+                            {totalCourses > 6 && (
+                                <div className="text-center mt-16">
+                                    <Link to={`/courses/explore${activeFilter !== 'All Courses' ? `?level=${encodeURIComponent(activeFilter)}` : ''}`}>
+                                        <Button
+                                            variant="outline"
+                                            size="lg"
+                                            className="rounded-full px-10 py-6 text-base font-semibold group hover:bg-primary hover:text-white hover:border-primary transition-all duration-300"
+                                        >
+                                            Explore All {totalCourses} Courses
+                                            <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                                        </Button>
+                                    </Link>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
             </section>
 
             {/* Features Section */}
-            <section className="py-24 bg-white">
+            <section className="py-24 bg-section-alt">
                 <div className="container mx-auto px-6 max-w-7xl">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground">Why Choose Our Courses?</h2>
@@ -277,8 +268,6 @@ export function CoursesPage() {
                     </a>
                 </div>
             </section>
-
-
         </div>
     )
 }
